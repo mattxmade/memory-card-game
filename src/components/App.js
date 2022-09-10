@@ -1,39 +1,23 @@
-import React, {
-  Fragment,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-
 import { nanoid } from "nanoid";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 
-import { Flex, Box, useFlexSize } from "@react-three/flex";
 import {
-  useAspect,
   Html,
   Plane,
   OrbitControls,
   Sky,
   Scroll,
   Stats,
-  useGLTF,
   ScrollControls,
 } from "@react-three/drei";
 
+import { Flex, Box, useFlexSize } from "@react-three/flex";
 import { Canvas, useLoader, useFrame, useThree } from "@react-three/fiber";
 
 import Card from "./THREE/Card";
 import GameCard from "./THREE/PlayCard";
-import degreesToRadian from "./THREE/utility/degressToRadian";
-
 import elipse from "../images/elipse.svg";
-
-import allAssetsFromDirectory from "./THREE/Assets";
-//const textures = allAssetsFromDirectory("textures");
-
-const models = allAssetsFromDirectory("models");
+import degreesToRadian from "./THREE/utility/degressToRadian";
 
 const PsxMemo = (props) => {
   // const ref = useRef();
@@ -72,56 +56,69 @@ const MemoryCards = () => {
 };
 
 const PsxCard = (props) => {
+  console.count("Card render");
+
+  const { card, clr, scale, rotate, rotation, beginGame, shuffle } = props;
   return (
     <GameCard
-      // altTexture={props.gameTex}
-      texture={props.texture}
-      scale={props.scale}
-      // rotate={props.rotate}
+      cardRef={card}
+      clr={clr}
+      scale={scale}
       // rotate={true}
-      rotation={props.rotation}
-      clr={props.clr}
-      beginGame={props.beginGame}
+      // rotate={rotate}
+      rotation={rotation}
+      beginGame={beginGame}
+      request={shuffle}
     />
   );
 };
 
-const FiveCardSuite = ({ maps, level, shuf, sendRequest }) => {
-  // console.dir(maps[0]);
-  // console.dir(shuf[0]);
+const FiveCardSuite = ({ level, sendRequest, cardSet }) => {
+  console.count("Row render");
+
+  const indexShuffle = shuffleIndexOrder(cardSet);
+  const shuffleDeck = cardSet.map(
+    (cards, index) => cardSet[indexShuffle[index]]
+  );
+
+  //console.log(cardSet);
+  //console.log(shuffleDeck);
+
+  const [cardsInPlay, setCardsInPlay] = useState(cardSet);
+  const [requestReshuffle, setRequestReshuffle] = useState(false);
 
   let cardIndex = 0;
 
   const [play, setPlay] = useState(false);
-  const [gameTextures, setGameTextures] = useState(maps);
-  const [altTextures, setAltTextures] = useState(shuf);
 
   useEffect(() => {
-    if (play) {
-      console.log("request");
-      //sendRequest("randomise game cards");
+    if (play || requestReshuffle) {
+      console.log("request reshuffle");
 
-      setGameTextures(shuf);
-      setAltTextures(maps);
-      setPlay(!play);
+      setCardsInPlay(() => {
+        const indexShuffle = shuffleIndexOrder(cardSet);
+        return cardSet.map((cards, index) => cardSet[indexShuffle[index]]);
+      });
+
+      setRequestReshuffle(false);
     }
-  }, [play]);
+  }, [play, requestReshuffle]);
 
   return (
     <Box flexDir={"row"} justify="center" wrap={"wrap"}>
-      {[...new Array(5)].map((item, index) => {
+      {cardsInPlay.map((card, index) => {
         const clr = cardIndex === 0 ? "black" : "white";
         cardIndex++;
 
         return (
           <Box key={nanoid()} centerAnchor={false} margin={0.05}>
             <PsxCard
-              gameTex={altTextures[index]}
-              texture={gameTextures[index]}
+              card={card}
+              clr={clr}
               scale={[0.1, 0.1, 0.1]}
               rotation={[180, 0, 0]}
-              clr={clr}
               beginGame={setPlay}
+              shuffle={setRequestReshuffle}
             />
           </Box>
         );
@@ -130,7 +127,7 @@ const FiveCardSuite = ({ maps, level, shuf, sendRequest }) => {
   );
 };
 
-let rowNum = 1;
+let rowNum = 4;
 
 const breakpoints = {
   small: 1.653704375753992,
@@ -138,60 +135,42 @@ const breakpoints = {
   large: 3.847596754008787,
 };
 
-const WidthReporter = (props) => {
-  const [width, height] = useFlexSize();
-  const { small, medium, large } = breakpoints;
+// destructuring props in ()
+const Layout = ({ pageOffset, distOffset, cardRows, requestNextLevel }) => {
+  console.count("Layout render");
+
+  const group = useRef();
+  const { size, viewport } = useThree();
+
+  const vpWidth = -viewport.width / 2 + 0.32;
+  // console.log(viewport.width);
 
   let breakpointPage = 0;
   let breakpointDistance = 0;
 
-  const { pageOffset, distOffset } = props.scrollOffsets;
-
-  // 5 card split over 5 rows
-  if (width <= small) {
-    breakpointPage = rowNum * 0.329 * 5;
-    // breakpointDistance = rowNum * 0.1 * 4;
-
-    pageOffset(breakpointPage);
-    distOffset(breakpointDistance);
-    return;
-  }
-
-  // 5 card split over 3 rows
-  if (width <= medium) {
-    breakpointPage = rowNum * 0.329 * 3;
-    // breakpointDistance = rowNum * 0.1 * 2;
-
-    pageOffset(breakpointPage);
-    distOffset(breakpointDistance);
-    return;
-  }
-
   // 5 card split over 2 rows
-  if (width <= large) {
+  if (viewport.width <= 3.847596754008787) {
     breakpointPage = rowNum * 0.331 * 2;
     // breakpointDistance = rowNum * 0.1;
-
-    pageOffset(breakpointPage);
-    distOffset(breakpointDistance);
-    return;
   }
-};
+  // 5 card split over 3 rows
+  if (viewport.width <= 2.388048332566217) {
+    breakpointPage = rowNum * 0.329 * 3;
+    // breakpointDistance = rowNum * 0.1 * 2;
+  }
+  // 5 cards split over 5 rows
+  if (viewport.width <= 1.653704375753992) {
+    breakpointPage = rowNum * 0.329 * 5;
+    // breakpointDistance = rowNum * 0.1 * 4;
+  }
 
-// destructuring props inside paretheses ()
-const Layout = ({ pageOffset, distOffset, maps, shuf, sendRequest, texs }) => {
-  const group = useRef();
-  const { size, viewport } = useThree();
+  // props callback to app
+  pageOffset(breakpointPage);
+  distOffset(breakpointDistance);
 
-  const vpWidth = viewport.width;
-
-  console.log(vpWidth);
-  console.log(viewport.width);
-
+  // vpWidth begin less than -1.4 means vp is getting wider
   const contentAlign =
-    vpWidth >= 3.533643546650431 && rowNum < 3 ? "center" : "flex-start";
-
-  //console.log(texs);
+    vpWidth < -1.4481063609166982 && rowNum < 3 ? "center" : "flex-start";
 
   return (
     <group ref={group}>
@@ -204,8 +183,6 @@ const Layout = ({ pageOffset, distOffset, maps, shuf, sendRequest, texs }) => {
         size={[viewport.width, viewport.height, 0]}
         position={[-viewport.width / 2 + 0.32, viewport.height / 2 - 0.36, 0]}
       >
-        <WidthReporter scrollOffsets={{ pageOffset, distOffset }} />
-
         {/* <Box margin={0.1} centerAnchor={false}>
         <PsxMemo
           color={"grey"}
@@ -215,13 +192,11 @@ const Layout = ({ pageOffset, distOffset, maps, shuf, sendRequest, texs }) => {
         />
       </Box> */}
 
-        {[...new Array(rowNum)].map((item, index) => (
+        {cardRows.map((cardSet, index) => (
           <FiveCardSuite
             key={nanoid()}
-            maps={maps[index]}
-            shuf={shuf[index]}
-            level={maps.length * 5}
-            sendRequest={sendRequest}
+            cardSet={cardSet}
+            requestNextLevel={requestNextLevel}
           />
         ))}
       </Flex>
@@ -229,7 +204,7 @@ const Layout = ({ pageOffset, distOffset, maps, shuf, sendRequest, texs }) => {
   );
 };
 
-const shuffleIndexOrder = (arrayOfTextures) => {
+const shuffleIndexOrder = (array) => {
   const shuffledArray = [];
   let uniqueIndex = 0;
 
@@ -238,7 +213,7 @@ const shuffleIndexOrder = (arrayOfTextures) => {
   };
 
   while (uniqueIndex < 5) {
-    const newIndex = arrayIndexRandomiser(arrayOfTextures);
+    const newIndex = arrayIndexRandomiser(array);
 
     if (!shuffledArray.includes(newIndex)) {
       uniqueIndex++;
@@ -247,10 +222,50 @@ const shuffleIndexOrder = (arrayOfTextures) => {
 
     if (uniqueIndex === 5) break;
   }
+
   return shuffledArray;
 };
 
 const App = (props) => {
+  console.count("App render");
+
+  const totalNumberOfCards = [...new Array(50).fill(0)].map(
+    (item, index) => (item = index)
+  );
+
+  const [rowCount, setRowCount] = useState(4);
+
+  const [cardRows, setCardRows] = useState(() => {
+    const objectSets = [];
+
+    let increment = 0;
+    let gameObjects = [];
+
+    for (let i = 0; i <= rowNum * 5; i++) {
+      const index =
+        totalNumberOfCards[
+          Math.floor(Math.random() * totalNumberOfCards.length)
+        ];
+
+      const cardGameObject = {
+        id: nanoid(),
+        rowIndex: i,
+        deckIndex: index,
+      };
+
+      gameObjects.push(cardGameObject);
+      increment++;
+
+      if (increment === 5) {
+        objectSets.push(gameObjects);
+        gameObjects = [];
+        increment = 0;
+      }
+    }
+
+    return objectSets;
+  });
+
   const body = document.body;
   body.style.cursor = `url(${elipse}), pointer`;
 
@@ -266,70 +281,34 @@ const App = (props) => {
   const [pageBreakpoint, setPageBreakpoint] = useState(0);
   const [distBreakpoint, setDistBreakpoint] = useState(0);
 
-  const modelTextures = models.map((model) => {
-    const name = model.name;
-
-    const { materials } = useGLTF(model.uri);
-    return { materials, name };
-  });
-
-  const [textureMaps, setTextureMaps] = useState(() => {
-    let increment = 0;
-    let array = [];
-    const finArray = [];
-
-    for (let i = 0; i <= rowNum * 5; i++) {
-      const index =
-        modelTextures[Math.floor(Math.random() * modelTextures.length)];
-
-      const textureObject = {
-        index: i,
-        id: index.materials[Object.keys(index.materials)[1]].uuid,
-        map: index.materials[Object.keys(index.materials)[1]],
-      };
-
-      array.push(textureObject);
-      increment++;
-
-      if (increment === 5) {
-        finArray.push(array);
-        array = [];
-        increment = 0;
-      }
-    }
-    return finArray;
-  });
-
-  // get two sets - firstOrder / then randomise position of firstOrder
-  const textureMapsShuffled = textureMaps.map((sets, index) => {
-    const shuffleArray = shuffleIndexOrder(sets);
-    return sets.map((texture, index) => sets[shuffleArray[index]]);
-  });
-
-  //console.table(textureMaps.flat());
-  //console.table(textureMapsShuffled.flat());
-
   const [score, setScore] = useState(0);
-  const [order, setOrder] = useState(textureMaps);
-
-  const [request, setRequest] = useState("");
+  const [requestNewCards, setRequestNewCards] = useState(false);
+  const [requestNextLevel, setRequestNextLevel] = useState(false);
 
   useEffect(() => {
-    if (request === "randomise game cards") {
-      console.log(request);
+    //console.log(pageBreakpoint, distBreakpoint);
+  }, [pageBreakpoint, distBreakpoint]);
 
-      // setOrder(() =>
-      //   textureMaps.map((sets, index) => {
-      //     total += sets.length;
+  useEffect(() => {
+    // console.log(score);
+  }, [score]);
 
-      //     const shuffleArray = shuffleIndexOrder(sets);
-      //     return sets.map((texture, index) => sets[shuffleArray[index]]);
-      //   })
-      // );
+  useEffect(() => {
+    if (requestNextLevel) {
+      setRowCount(rowCount + 1);
+      // new cards, new row
+      setRequestNextLevel(false);
     }
+  }, [requestNextLevel]);
 
-    setRequest("");
-  }, [request]);
+  useEffect(() => {
+    if (requestNewCards) {
+      // new cards, same number of rows
+      setRequestNewCards(false);
+    }
+  }, [requestNewCards]);
+
+  // console.log(rowCount);
 
   // loop
   return (
@@ -345,9 +324,8 @@ const App = (props) => {
           }}
         >
           <Stats />
-          <OrbitControls />
+          {/* <OrbitControls /> */}
           <color attach="background" args={["lightgrey"]} />
-
           <directionalLight
             args={[0xffffff]} //0xff0000
             color="whitesmoke"
@@ -370,8 +348,8 @@ const App = (props) => {
           />
 
           <ScrollControls
-            pages={pageBreakpoint === 0 ? pages : pageBreakpoint} // Page height
-            distance={distance + distBreakpoint} // Scroll bar travel
+            pages={pageBreakpoint === 0 ? pages : pageBreakpoint} // Each page takes 100% of the height of the canvas
+            distance={distance + distBreakpoint} // scroll bar travel (default: 1)
             damping={3} // Friction, higher is faster (default: 4)
             horizontal={false} // Can also scroll horizontally (default: false)
             infinite={false} // Can also scroll infinitely (default: false)
@@ -379,12 +357,12 @@ const App = (props) => {
             <Scroll>
               <Suspense fallback={<Html center>loading..</Html>}>
                 <Layout
+                  cardRows={cardRows}
                   pageOffset={setPageBreakpoint}
                   distOffset={setDistBreakpoint}
-                  maps={textureMaps}
-                  shuf={textureMapsShuffled}
-                  sendRequest={setRequest}
-                  texs={modelTextures}
+                  requestNewCards={setRequestNewCards}
+                  requestNextLevel={setRequestNextLevel}
+                  notifyScore={setScore}
                 />
               </Suspense>
             </Scroll>
