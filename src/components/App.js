@@ -24,14 +24,6 @@ import {
 
 import { Canvas, useLoader, useFrame, useThree } from "@react-three/fiber";
 
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
-import { TextureLoader } from "three/src/loaders/TextureLoader";
-
-import memoryCard from "./THREE/models/PS1MemoryCard_BLEND/MemoryCard.fbx";
-import memoryCardColorMap from "./THREE/models/PS1MemoryCard_BLEND/MCard_C.jpg";
-import memoryCardNormalMap from "./THREE/models/PS1MemoryCard_BLEND/MCard_N.jpg";
-import memoryCardSpecularMap from "./THREE/models/PS1MemoryCard_BLEND/MCard_S.jpg";
-
 import Card from "./THREE/Card";
 import GameCard from "./THREE/PlayCard";
 import degreesToRadian from "./THREE/utility/degressToRadian";
@@ -42,28 +34,6 @@ import allAssetsFromDirectory from "./THREE/Assets";
 //const textures = allAssetsFromDirectory("textures");
 
 const models = allAssetsFromDirectory("models");
-
-const CVState = () => {
-  // const canvasState = useThree();
-  // console.dir(canvasState);
-
-  // const fbx = useThree((state) => state.scene.children[2]);
-  // if (fbx) console.log(fbx);
-
-  useFrame((state, delta, xrFrame) => {
-    const fbx = state.scene.children[2];
-    if (fbx) fbx.rotation.y -= delta;
-  });
-};
-
-const MemoryCard = (props) => {
-  const fbx = useLoader(FBXLoader, memoryCard);
-
-  fbx.scale.set(0.25, 0.25, 0.25);
-  fbx.rotation.set(1.57, 0, 0);
-
-  return <primitive object={fbx} />;
-};
 
 const PsxMemo = (props) => {
   // const ref = useRef();
@@ -228,7 +198,6 @@ const Layout = ({ pageOffset, distOffset, maps, shuf, sendRequest, texs }) => {
       <Flex
         padding={0.1}
         flexDirection="column"
-        // flexWrap="wrap"
         justify={contentAlign}
         alignItems="center"
         alignContent={contentAlign}
@@ -259,8 +228,6 @@ const Layout = ({ pageOffset, distOffset, maps, shuf, sendRequest, texs }) => {
     </group>
   );
 };
-
-//mesh basic material colou | "#082444"
 
 const shuffleIndexOrder = (arrayOfTextures) => {
   const shuffledArray = [];
@@ -334,8 +301,6 @@ const App = (props) => {
   });
 
   // get two sets - firstOrder / then randomise position of firstOrder
-  let total = 0;
-
   const textureMapsShuffled = textureMaps.map((sets, index) => {
     total += sets.length;
 
@@ -343,7 +308,6 @@ const App = (props) => {
     return sets.map((texture, index) => sets[shuffleArray[index]]);
   });
 
-  //console.log(total);
   //console.table(textureMaps.flat());
   //console.table(textureMapsShuffled.flat());
 
@@ -369,12 +333,6 @@ const App = (props) => {
     setRequest("");
   }, [request]);
 
-  // console.log(pages, distance);
-
-  useEffect(() => {
-    //console.log(pageBreakpoint, distBreakpoint);
-  }, [pageBreakpoint, distBreakpoint]);
-
   // loop
   return (
     <>
@@ -389,12 +347,9 @@ const App = (props) => {
           }}
         >
           <Stats />
-          {/* <Sky /> */}
-          <color attach="background" args={["lightgrey"]} />
-          {/* <fog attach="fog" args={["lightgrey", 0, 26]} /> */}
-          {/* <CVState /> */}
-          {/* <OrbitControls autoRotate /> */}
           <OrbitControls />
+          <color attach="background" args={["lightgrey"]} />
+
           <directionalLight
             args={[0xffffff]} //0xff0000
             color="whitesmoke"
@@ -417,12 +372,8 @@ const App = (props) => {
           />
 
           <ScrollControls
-            // pages={1.325}
-            // distance={0.1}
-            // pages={rowNum <= 3 ? 1 : 1.325} // Each page takes 100% of the height of the canvas
-            // distance={rowNum <= 3 ? 0 : 0.1} // A factor that increases scroll bar travel (default: 1)
-            pages={pageBreakpoint === 0 ? pages : pageBreakpoint}
-            distance={distance + distBreakpoint}
+            pages={pageBreakpoint === 0 ? pages : pageBreakpoint} // Page height
+            distance={distance + distBreakpoint} // Scroll bar travel
             damping={3} // Friction, higher is faster (default: 4)
             horizontal={false} // Can also scroll horizontally (default: false)
             infinite={false} // Can also scroll infinitely (default: false)
