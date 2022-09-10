@@ -162,42 +162,66 @@ const FiveCardSuite = ({ maps, level, shuf, sendRequest }) => {
 
 let rowNum = 1;
 
-// destructuring props in ()
+const breakpoints = {
+  small: 1.653704375753992,
+  medium: 2.388048332566217,
+  large: 3.847596754008787,
+};
+
+const WidthReporter = (props) => {
+  const [width, height] = useFlexSize();
+  const { small, medium, large } = breakpoints;
+
+  let breakpointPage = 0;
+  let breakpointDistance = 0;
+
+  const { pageOffset, distOffset } = props.scrollOffsets;
+
+  // 5 card split over 5 rows
+  if (width <= small) {
+    breakpointPage = rowNum * 0.329 * 5;
+    // breakpointDistance = rowNum * 0.1 * 4;
+
+    pageOffset(breakpointPage);
+    distOffset(breakpointDistance);
+    return;
+  }
+
+  // 5 card split over 3 rows
+  if (width <= medium) {
+    breakpointPage = rowNum * 0.329 * 3;
+    // breakpointDistance = rowNum * 0.1 * 2;
+
+    pageOffset(breakpointPage);
+    distOffset(breakpointDistance);
+    return;
+  }
+
+  // 5 card split over 2 rows
+  if (width <= large) {
+    breakpointPage = rowNum * 0.331 * 2;
+    // breakpointDistance = rowNum * 0.1;
+
+    pageOffset(breakpointPage);
+    distOffset(breakpointDistance);
+    return;
+  }
+};
+
+// destructuring props inside paretheses ()
 const Layout = ({ pageOffset, distOffset, maps, shuf, sendRequest, texs }) => {
   const group = useRef();
   const { size, viewport } = useThree();
 
   const vpWidth = -viewport.width / 2 + 0.32;
-  // console.log(viewport.width);
 
-  let breakpointPage = 0;
-  let breakpointDistance = 0;
-
-  // 5 card split over 2 rows
-  if (viewport.width <= 3.847596754008787) {
-    breakpointPage = rowNum * 0.331 * 2;
-    // breakpointDistance = rowNum * 0.1;
-  }
-  // 5 card split over 3 rows
-  if (viewport.width <= 2.388048332566217) {
-    breakpointPage = rowNum * 0.329 * 3;
-    // breakpointDistance = rowNum * 0.1 * 2;
-  }
-  // 5 cards split over 5 rows
-  if (viewport.width <= 1.653704375753992) {
-    breakpointPage = rowNum * 0.329 * 5;
-    // breakpointDistance = rowNum * 0.1 * 4;
-  }
-
-  // props callback to app
-  pageOffset(breakpointPage);
-  distOffset(breakpointDistance);
+  //console.log(vpWidth);
 
   // vpWidth begin less than -1.4 means vp is getting wider
   const contentAlign =
     vpWidth < -1.4481063609166982 && rowNum < 3 ? "center" : "flex-start";
 
-  console.log(texs);
+  //console.log(texs);
 
   return (
     <group ref={group}>
@@ -211,7 +235,8 @@ const Layout = ({ pageOffset, distOffset, maps, shuf, sendRequest, texs }) => {
         size={[viewport.width, viewport.height, 0]}
         position={[-viewport.width / 2 + 0.32, viewport.height / 2 - 0.36, 0]}
       >
-        {/* <HeightReporter onReflow={onReflow} /> */}
+        <WidthReporter scrollOffsets={{ pageOffset, distOffset }} />
+
         {/* <Box margin={0.1} centerAnchor={false}>
         <PsxMemo
           color={"grey"}
