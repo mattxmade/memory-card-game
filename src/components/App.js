@@ -183,13 +183,13 @@ const Layout = ({ pageOffset, distOffset, maps, shuf, sendRequest, texs }) => {
   const group = useRef();
   const { size, viewport } = useThree();
 
-  const vpWidth = -viewport.width / 2 + 0.32;
+  const vpWidth = viewport.width;
 
-  //console.log(vpWidth);
+  console.log(vpWidth);
+  console.log(viewport.width);
 
-  // vpWidth begin less than -1.4 means vp is getting wider
   const contentAlign =
-    vpWidth < -1.4481063609166982 && rowNum < 3 ? "center" : "flex-start";
+    vpWidth >= 3.533643546650431 && rowNum < 3 ? "center" : "flex-start";
 
   //console.log(texs);
 
@@ -302,8 +302,6 @@ const App = (props) => {
 
   // get two sets - firstOrder / then randomise position of firstOrder
   const textureMapsShuffled = textureMaps.map((sets, index) => {
-    total += sets.length;
-
     const shuffleArray = shuffleIndexOrder(sets);
     return sets.map((texture, index) => sets[shuffleArray[index]]);
   });
