@@ -11,7 +11,7 @@ import {
   ScrollControls,
 } from "@react-three/drei";
 
-import { Flex, Box, useFlexSize } from "@react-three/flex";
+import { Flex, Box, useFlexSize, useReflow } from "@react-three/flex";
 import { Canvas, useLoader, useFrame, useThree } from "@react-three/fiber";
 
 import Card from "./THREE/Card";
@@ -56,7 +56,7 @@ const MemoryCards = () => {
 };
 
 const PsxCard = (props) => {
-  console.count("Card render");
+  //console.count("Card render");
 
   const { card, clr, scale, rotate, rotation, beginGame, shuffle } = props;
   return (
@@ -73,40 +73,14 @@ const PsxCard = (props) => {
   );
 };
 
-const FiveCardSuite = ({ level, sendRequest, cardSet }) => {
-  console.count("Row render");
-
-  const indexShuffle = shuffleIndexOrder(cardSet);
-  const shuffleDeck = cardSet.map(
-    (cards, index) => cardSet[indexShuffle[index]]
-  );
-
-  //console.log(cardSet);
-  //console.log(shuffleDeck);
-
-  const [cardsInPlay, setCardsInPlay] = useState(cardSet);
-  const [requestReshuffle, setRequestReshuffle] = useState(false);
+const FiveCardSuite = ({ cardSet, requestReshuffle }) => {
+  //console.count("Row render");
 
   let cardIndex = 0;
 
-  const [play, setPlay] = useState(false);
-
-  useEffect(() => {
-    if (play || requestReshuffle) {
-      console.log("request reshuffle");
-
-      setCardsInPlay(() => {
-        const indexShuffle = shuffleIndexOrder(cardSet);
-        return cardSet.map((cards, index) => cardSet[indexShuffle[index]]);
-      });
-
-      setRequestReshuffle(false);
-    }
-  }, [play, requestReshuffle]);
-
   return (
     <Box flexDir={"row"} justify="center" wrap={"wrap"}>
-      {cardsInPlay.map((card, index) => {
+      {cardSet.map((card, index) => {
         const clr = cardIndex === 0 ? "black" : "white";
         cardIndex++;
 
@@ -117,8 +91,8 @@ const FiveCardSuite = ({ level, sendRequest, cardSet }) => {
               clr={clr}
               scale={[0.1, 0.1, 0.1]}
               rotation={[180, 0, 0]}
-              beginGame={setPlay}
-              shuffle={setRequestReshuffle}
+              //beginGame={setPlay}
+              shuffle={requestReshuffle}
             />
           </Box>
         );
@@ -127,7 +101,7 @@ const FiveCardSuite = ({ level, sendRequest, cardSet }) => {
   );
 };
 
-let rowNum = 4;
+let rowNum = 10;
 
 const breakpoints = {
   small: 1.653704375753992,
@@ -136,8 +110,8 @@ const breakpoints = {
 };
 
 // destructuring props in ()
-const Layout = ({ pageOffset, distOffset, cardRows, requestNextLevel }) => {
-  console.count("Layout render");
+const Layout = ({ pageOffset, distOffset, requestNextLevel, cards }) => {
+  //console.count("Layout render");
 
   const group = useRef();
   const { size, viewport } = useThree();
@@ -172,6 +146,29 @@ const Layout = ({ pageOffset, distOffset, cardRows, requestNextLevel }) => {
   const contentAlign =
     vpWidth < -1.4481063609166982 && rowNum < 3 ? "center" : "flex-start";
 
+  let set = 0;
+  let fiveCardSet = [];
+
+  const [cardsInPlay, setCardsInPlay] = useState(cards);
+  const [requestReshuffle, setRequestReshuffle] = useState(false);
+
+  const [play, setPlay] = useState(false);
+
+  useEffect(() => {
+    if (play || requestReshuffle) {
+      console.log("request reshuffle");
+
+      setCardsInPlay(() => {
+        const indexShuffle = shuffleIndexOrder(cardsInPlay, cardsInPlay.length);
+        return cardsInPlay.map(
+          (card, index) => cardsInPlay[indexShuffle[index]]
+        );
+      });
+
+      setRequestReshuffle(false);
+    }
+  }, [play, requestReshuffle, cardsInPlay]);
+
   return (
     <group ref={group}>
       <Flex
@@ -192,19 +189,32 @@ const Layout = ({ pageOffset, distOffset, cardRows, requestNextLevel }) => {
         />
       </Box> */}
 
-        {cardRows.map((cardSet, index) => (
-          <FiveCardSuite
-            key={nanoid()}
-            cardSet={cardSet}
-            requestNextLevel={requestNextLevel}
-          />
-        ))}
+        {cardsInPlay.map((card, index) => {
+          if (set === 5) {
+            set = 0;
+            fiveCardSet = [];
+          }
+
+          fiveCardSet.push(card);
+          set++;
+
+          if (set === 5) {
+            return (
+              <FiveCardSuite
+                key={nanoid()}
+                cardSet={fiveCardSet}
+                requestNextLevel={requestNextLevel}
+                requestReshuffle={setRequestReshuffle}
+              />
+            );
+          }
+        })}
       </Flex>
     </group>
   );
 };
 
-const shuffleIndexOrder = (array) => {
+const shuffleIndexOrder = (array, stopper) => {
   const shuffledArray = [];
   let uniqueIndex = 0;
 
@@ -212,7 +222,7 @@ const shuffleIndexOrder = (array) => {
     return Math.floor(Math.random() * array.length);
   };
 
-  while (uniqueIndex < 5) {
+  while (uniqueIndex < stopper) {
     const newIndex = arrayIndexRandomiser(array);
 
     if (!shuffledArray.includes(newIndex)) {
@@ -220,7 +230,7 @@ const shuffleIndexOrder = (array) => {
       shuffledArray.push(newIndex);
     }
 
-    if (uniqueIndex === 5) break;
+    if (uniqueIndex === stopper) break;
   }
 
   return shuffledArray;
@@ -264,6 +274,39 @@ const App = (props) => {
     }
 
     return objectSets;
+  });
+
+  const [cardCount, setCardCount] = useState(rowNum * 5);
+
+  const [cards, setCards] = useState(() => {
+    const gameObjects = [];
+    const indexTracker = [];
+
+    let uniqueIndex = 0;
+
+    while (uniqueIndex < rowNum * 5) {
+      const index =
+        totalNumberOfCards[
+          Math.floor(Math.random() * totalNumberOfCards.length)
+        ];
+
+      if (!indexTracker.includes(index)) {
+        const cardGameObject = {
+          id: nanoid(),
+          rowIndex: uniqueIndex,
+          deckIndex: index,
+        };
+
+        uniqueIndex++;
+        gameObjects.push(cardGameObject);
+
+        indexTracker.push(index);
+      }
+
+      if (uniqueIndex === rowNum * 5) break;
+    }
+
+    return gameObjects;
   });
 
   const body = document.body;
@@ -357,6 +400,7 @@ const App = (props) => {
             <Scroll>
               <Suspense fallback={<Html center>loading..</Html>}>
                 <Layout
+                  cards={cards}
                   cardRows={cardRows}
                   pageOffset={setPageBreakpoint}
                   distOffset={setDistBreakpoint}
