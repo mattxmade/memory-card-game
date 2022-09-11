@@ -11,7 +11,7 @@ import {
   ScrollControls,
 } from "@react-three/drei";
 
-import { Flex, Box, useFlexSize, useReflow } from "@react-three/flex";
+import { Flex, Box, useFlexSize } from "@react-three/flex";
 import { Canvas, useLoader, useFrame, useThree } from "@react-three/fiber";
 
 import Card from "./THREE/Card";
@@ -58,7 +58,7 @@ const MemoryCards = () => {
 const PsxCard = (props) => {
   //console.count("Card render");
 
-  const { card, clr, scale, rotate, rotation, beginGame, shuffle } = props;
+  const { card, clr, scale, rotate, rotation, selected, shuffle } = props;
   return (
     <GameCard
       cardRef={card}
@@ -67,13 +67,13 @@ const PsxCard = (props) => {
       // rotate={true}
       // rotate={rotate}
       rotation={rotation}
-      beginGame={beginGame}
+      selected={selected}
       request={shuffle}
     />
   );
 };
 
-const FiveCardSuite = ({ cardSet, requestReshuffle }) => {
+const FiveCardSuite = ({ cardSet, requestReshuffle, selected }) => {
   //console.count("Row render");
 
   let cardIndex = 0;
@@ -91,7 +91,7 @@ const FiveCardSuite = ({ cardSet, requestReshuffle }) => {
               clr={clr}
               scale={[0.1, 0.1, 0.1]}
               rotation={[180, 0, 0]}
-              //beginGame={setPlay}
+              selected={selected}
               shuffle={requestReshuffle}
             />
           </Box>
@@ -101,7 +101,7 @@ const FiveCardSuite = ({ cardSet, requestReshuffle }) => {
   );
 };
 
-let rowNum = 10;
+let rowNum = 1;
 
 const breakpoints = {
   small: 1.653704375753992,
@@ -110,7 +110,15 @@ const breakpoints = {
 };
 
 // destructuring props in ()
-const Layout = ({ pageOffset, distOffset, requestNextLevel, cards }) => {
+const Layout = ({
+  pageOffset,
+  distOffset,
+  requestNewCards,
+  requestNextLevel,
+  level,
+  cards,
+  setCards,
+}) => {
   //console.count("Layout render");
 
   const group = useRef();
@@ -124,18 +132,18 @@ const Layout = ({ pageOffset, distOffset, requestNextLevel, cards }) => {
 
   // 5 card split over 2 rows
   if (viewport.width <= 3.847596754008787) {
-    breakpointPage = rowNum * 0.331 * 2;
-    // breakpointDistance = rowNum * 0.1;
+    breakpointPage = level * 0.331 * 2;
+    // breakpointDistance = level * 0.1;
   }
   // 5 card split over 3 rows
   if (viewport.width <= 2.388048332566217) {
-    breakpointPage = rowNum * 0.329 * 3;
-    // breakpointDistance = rowNum * 0.1 * 2;
+    breakpointPage = level * 0.329 * 3;
+    // breakpointDistance = level * 0.1 * 2;
   }
   // 5 cards split over 5 rows
   if (viewport.width <= 1.653704375753992) {
-    breakpointPage = rowNum * 0.329 * 5;
-    // breakpointDistance = rowNum * 0.1 * 4;
+    breakpointPage = level * 0.329 * 5;
+    // breakpointDistance = level * 0.1 * 4;
   }
 
   // props callback to app
@@ -144,30 +152,54 @@ const Layout = ({ pageOffset, distOffset, requestNextLevel, cards }) => {
 
   // vpWidth begin less than -1.4 means vp is getting wider
   const contentAlign =
-    vpWidth < -1.4481063609166982 && rowNum < 3 ? "center" : "flex-start";
+    vpWidth < -1.4481063609166982 && level < 3 ? "center" : "flex-start";
 
   let set = 0;
   let fiveCardSet = [];
 
-  const [cardsInPlay, setCardsInPlay] = useState(cards);
   const [requestReshuffle, setRequestReshuffle] = useState(false);
 
-  const [play, setPlay] = useState(false);
-
   useEffect(() => {
-    if (play || requestReshuffle) {
-      console.log("request reshuffle");
+    if (requestReshuffle) {
+      //console.log("request reshuffle");
 
-      setCardsInPlay(() => {
-        const indexShuffle = shuffleIndexOrder(cardsInPlay, cardsInPlay.length);
-        return cardsInPlay.map(
-          (card, index) => cardsInPlay[indexShuffle[index]]
-        );
+      setCards(() => {
+        const indexShuffle = shuffleIndexOrder(cards, cards.length);
+        return cards.map((card, index) => cards[indexShuffle[index]]);
       });
 
       setRequestReshuffle(false);
     }
-  }, [play, requestReshuffle, cardsInPlay]);
+  }, [requestReshuffle]);
+
+  const [selected, setSelected] = useState();
+  const [trackSelected, setTrackSelected] = useState([]);
+
+  useEffect(() => {
+    if (selected) {
+      if (trackSelected.includes(selected)) {
+        //console.log("You Lose...");
+        setSelected();
+        setTrackSelected([]);
+        return requestNewCards(true);
+      }
+
+      //console.log("Great work, keep it up!");
+      setTrackSelected(trackSelected.concat(selected));
+      setSelected();
+    }
+  }, [selected]);
+
+  useEffect(() => {
+    if (trackSelected.length === cards.length) {
+      //console.log("You Win!");
+
+      setTrackSelected([]);
+      requestNextLevel(true);
+    }
+  }, [trackSelected]);
+
+  //if (trackSelected.length) console.log(trackSelected);
 
   return (
     <group ref={group}>
@@ -189,7 +221,7 @@ const Layout = ({ pageOffset, distOffset, requestNextLevel, cards }) => {
         />
       </Box> */}
 
-        {cardsInPlay.map((card, index) => {
+        {cards.map((card, index) => {
           if (set === 5) {
             set = 0;
             fiveCardSet = [];
@@ -203,7 +235,7 @@ const Layout = ({ pageOffset, distOffset, requestNextLevel, cards }) => {
               <FiveCardSuite
                 key={nanoid()}
                 cardSet={fiveCardSet}
-                requestNextLevel={requestNextLevel}
+                selected={setSelected}
                 requestReshuffle={setRequestReshuffle}
               />
             );
@@ -236,78 +268,46 @@ const shuffleIndexOrder = (array, stopper) => {
   return shuffledArray;
 };
 
+const newCardSet = (level, allCards) => {
+  const gameObjects = [];
+  const indexTracker = [];
+
+  let uniqueIndex = 0;
+  const totalNumOfCards = level * 5;
+
+  while (gameObjects.length < totalNumOfCards) {
+    const index = allCards[Math.floor(Math.random() * allCards.length)];
+
+    if (!indexTracker.includes(index)) {
+      const cardGameObject = {
+        id: nanoid(),
+        rowIndex: uniqueIndex,
+        deckIndex: index,
+      };
+
+      uniqueIndex++;
+      gameObjects.push(cardGameObject);
+
+      indexTracker.push(index);
+    }
+
+    if (gameObjects.length === totalNumOfCards) break;
+  }
+
+  return gameObjects;
+};
+
 const App = (props) => {
-  console.count("App render");
+  //console.count("App render");
 
   const totalNumberOfCards = [...new Array(50).fill(0)].map(
     (item, index) => (item = index)
   );
 
-  const [rowCount, setRowCount] = useState(4);
+  const [score, setScore] = useState(0);
+  const [level, setLevel] = useState(10);
 
-  const [cardRows, setCardRows] = useState(() => {
-    const objectSets = [];
-
-    let increment = 0;
-    let gameObjects = [];
-
-    for (let i = 0; i <= rowNum * 5; i++) {
-      const index =
-        totalNumberOfCards[
-          Math.floor(Math.random() * totalNumberOfCards.length)
-        ];
-
-      const cardGameObject = {
-        id: nanoid(),
-        rowIndex: i,
-        deckIndex: index,
-      };
-
-      gameObjects.push(cardGameObject);
-      increment++;
-
-      if (increment === 5) {
-        objectSets.push(gameObjects);
-        gameObjects = [];
-        increment = 0;
-      }
-    }
-
-    return objectSets;
-  });
-
-  const [cardCount, setCardCount] = useState(rowNum * 5);
-
-  const [cards, setCards] = useState(() => {
-    const gameObjects = [];
-    const indexTracker = [];
-
-    let uniqueIndex = 0;
-
-    while (uniqueIndex < rowNum * 5) {
-      const index =
-        totalNumberOfCards[
-          Math.floor(Math.random() * totalNumberOfCards.length)
-        ];
-
-      if (!indexTracker.includes(index)) {
-        const cardGameObject = {
-          id: nanoid(),
-          rowIndex: uniqueIndex,
-          deckIndex: index,
-        };
-
-        uniqueIndex++;
-        gameObjects.push(cardGameObject);
-
-        indexTracker.push(index);
-      }
-
-      if (uniqueIndex === rowNum * 5) break;
-    }
-
-    return gameObjects;
-  });
+  const [cards, setCards] = useState(newCardSet(level, totalNumberOfCards));
 
   const body = document.body;
   body.style.cursor = `url(${elipse}), pointer`;
@@ -318,42 +318,37 @@ const App = (props) => {
   // page     : .331 === 1 card row
   // distance : 0.1  === 1 card row
 
-  const pages = rowNum <= 3 ? 1 : rowNum * 0.331;
-  const distance = rowNum <= 3 ? 0 : rowNum * 0.01;
+  // code something up for smaller viewports
+  const pages = level <= 3 ? 1 : level * 0.331;
+  const distance = level <= 3 ? 0 : level * 0.01;
 
   const [pageBreakpoint, setPageBreakpoint] = useState(0);
   const [distBreakpoint, setDistBreakpoint] = useState(0);
 
-  const [score, setScore] = useState(0);
   const [requestNewCards, setRequestNewCards] = useState(false);
   const [requestNextLevel, setRequestNextLevel] = useState(false);
-
-  useEffect(() => {
-    //console.log(pageBreakpoint, distBreakpoint);
-  }, [pageBreakpoint, distBreakpoint]);
 
   useEffect(() => {
     // console.log(score);
   }, [score]);
 
+  // new cards, same number of rows (level unchanged)
   useEffect(() => {
     if (requestNextLevel) {
-      setRowCount(rowCount + 1);
-      // new cards, new row
+      setLevel(level + 1);
+      setRequestNewCards(true);
       setRequestNextLevel(false);
     }
   }, [requestNextLevel]);
 
+  // new cards, same number of rows (level unchanged)
   useEffect(() => {
     if (requestNewCards) {
-      // new cards, same number of rows
+      setCards(newCardSet(level, totalNumberOfCards));
       setRequestNewCards(false);
     }
   }, [requestNewCards]);
 
-  // console.log(rowCount);
-
-  // loop
   return (
     <>
       <div id="canvas-container">
@@ -367,7 +362,7 @@ const App = (props) => {
           }}
         >
           <Stats />
-          {/* <OrbitControls /> */}
+          <OrbitControls />
           <color attach="background" args={["lightgrey"]} />
           <directionalLight
             args={[0xffffff]} //0xff0000
@@ -401,7 +396,8 @@ const App = (props) => {
               <Suspense fallback={<Html center>loading..</Html>}>
                 <Layout
                   cards={cards}
-                  cardRows={cardRows}
+                  setCards={setCards}
+                  level={level}
                   pageOffset={setPageBreakpoint}
                   distOffset={setDistBreakpoint}
                   requestNewCards={setRequestNewCards}
