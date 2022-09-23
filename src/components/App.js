@@ -3,12 +3,9 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 
 import {
   Html,
-  Plane,
   Scroll,
   Stats,
-  Text3D,
   Float,
-  Sky,
   useGLTF,
   useScroll,
   OrbitControls,
@@ -17,25 +14,24 @@ import {
 } from "@react-three/drei";
 
 import { Flex, Box } from "@react-three/flex";
-import { Canvas, useLoader, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 
 import Card from "./three-fiber-customs/Card";
-import GameAssets from "./three-fiber-customs/PlayCard";
-import InterBold from "./three-fiber-customs/fonts/Inter_Bold.json";
+import PlayCard from "./three-fiber-customs/PlayCard";
+
 import elipse from "../images/elipse.svg";
 import degreesToRadian from "./three-fiber-customs/utility/degressToRadian";
-import psIcon from "../components/ps_home_a.svg";
-import { TextureLoader } from "three";
 
 import Stage from "./three-fiber-customs/Stage";
 import Lighting from "./three-fiber-customs/Lighting";
 
 import Game from "./Game";
 import Scoreboard from "./Scoreboard";
+import GameResult from "./three-fiber-customs/GameResult";
 
 import allAssetsFromDirectory from "./three-fiber-customs/Assets";
 
-const PsxMemo = (props) => (
+const PsxMemCard = (props) => (
   <Card
     position={props.position}
     color={props.color}
@@ -47,44 +43,14 @@ const PsxMemo = (props) => (
 
 const colours = ["grey", "steelblue", "indianred", "purple"];
 
-const materialProps = {
-  thickness: 5,
-  roughness: 0,
-  clearcoat: 1,
-  clearcoatRoughness: 0,
-  transmission: 1,
-  ior: 1.25,
-  envMapIntensity: 25,
-  color: "#ffffff",
-  attenuationTint: "#ffe79e",
-  attenuationDistance: 1,
-};
-
-const Sphere = (props) => {
-  const colorMap = useLoader(TextureLoader, psIcon);
-
-  return (
-    <Float>
-      <mesh position={props.position} rotation={props.rotation}>
-        <sphereGeometry args={[0.1, 32, 16]} />
-        <meshPhysicalMaterial
-          wireframe={true}
-          map={colorMap}
-          {...materialProps}
-        />
-      </mesh>
-    </Float>
-  );
-};
-
 const PsxCard = (props) => {
-  //console.count("Card render");
+  console.count("Card render");
 
-  const NewCard = GameAssets.GameCard;
+  const GameplayCard = PlayCard.create;
   const { card, clr, scale, rotation, selected, materials } = props;
 
   return (
-    <NewCard
+    <GameplayCard
       card={card}
       materials={materials}
       cardRef={card}
@@ -126,13 +92,9 @@ const FiveCardSuite = ({ cardSet, selected, materials }) => {
   );
 };
 
-let rowNum = 10;
-
 const totalNumberOfCards = [...new Array(50).fill(0)].map(
   (item, index) => (item = index)
 );
-
-// hooks
 
 const GameView = (props) => {
   //console.count("Game view render");
@@ -246,7 +208,6 @@ const GameView = (props) => {
           materials={props.materials}
           cardSet={fiveCardSet}
           selected={setSelected}
-          // requestReshuffle={setRequestReshuffle}
         />
       );
     }
@@ -353,40 +314,32 @@ const flexDisplayHandler = (width, height, heightOffset, numberOfRows) => {
   return { pageBreakpoint, distBreakpoint, contentAlign };
 };
 
-const Layout = ({ materials }) => {
+const GameLayout = ({ materials }) => {
   console.count("Layout render");
+
+  const group = useRef();
+  const { size, viewport } = useThree();
+
+  const width = size.width;
+  const height = size.height;
+
+  // level | number of rows (5 cards per row | 50 card total | 10 levels)
+  const [level, setLevel] = useState(1);
+  const [score, setScore] = useState(0);
+  const [gameResult, setGameResult] = useState({ message: "", style: "white" });
 
   /*
   ScrollControls
     page increment  : .329 | scale height of single card with margin
     scroll distance : 0.1  | scroll travel distance for 1 card row
   */
-
-  const group = useRef();
-  const { size, viewport } = useThree();
-
-  // level | number of rows (5 cards per row | 50 card total | 10 levels)
-  const [level, setLevel] = useState(1);
-  const [score, setScore] = useState(0);
-
-  const width = size.width;
-  const height = size.height;
-
-  const margin = true; // compensate for margin on card box
-  const cardHeight = margin ? 0.329 : 0.295; // card scale height
+  const cardHeight = 0.329;
 
   const cardsLayout = flexDisplayHandler(width, height, cardHeight, level);
   const { pageBreakpoint, distBreakpoint, contentAlign } = cardsLayout;
 
-  let MobileGuiOffset = 0.125;
-  const padBot = level < 2 && size.width >= 655 ? 0.25 : 0.1;
-
-  const [gameResult, setGameResult] = useState({ message: "", style: "white" });
-
   const flexProps = {
     paddingTop: 0.1,
-    //paddingBottom: padBot,
-    // paddingBottom: 0.1,
     flexDir: "column",
     justify: contentAlign,
     alignItems: "center",
@@ -400,15 +353,8 @@ const Layout = ({ materials }) => {
     0,
   ];
 
-  const flexScoreBoardPos = [
-    -viewport.width / 2 + 0.1,
-    viewport.height / 2 - 0.1,
-    0,
-  ];
-
   const [presRotation, setPresRotation] = useState(
-    degreesToRadian([0, 0, 0])
-    //degreesToRadian([0, 0, 0])
+    degreesToRadian([-12, 0, 0])
   );
 
   const rotateView = (rotation, timer) => {
@@ -420,7 +366,7 @@ const Layout = ({ materials }) => {
   useEffect(() => {
     if (gameResult.message !== "") {
       rotateView(degreesToRadian([-40, 0, 0]), 600, false);
-      rotateView(degreesToRadian([0, 0, 0]), 3000, true);
+      rotateView(degreesToRadian([-12, 0, 0]), 3000, true);
 
       setTimeout(() => setGameResult({ message: "", style: "white" }), 3100);
     }
@@ -441,7 +387,6 @@ const Layout = ({ materials }) => {
           snap={false} // snap back to default position
           speed={1}
           zoom={1}
-          //rotation={[0, 0, 0]}
           rotation={presRotation} // Default rotation
           polar={[-Math.PI / 6, 0]} // Vertical limits
           azimuth={[0, 0]} // Horizontal limits
@@ -449,7 +394,7 @@ const Layout = ({ materials }) => {
         >
           <ScrollConfig />
           <Scroll>
-            {/* <PsxMemo
+            {/* <PsxMemCard
               position={[0, 0.75, -1]}
               color={"grey"}
               invert={false}
@@ -468,46 +413,7 @@ const Layout = ({ materials }) => {
               />
             </Flex>
 
-            <Flex {...flexProps} position={flexScoreBoardPos}>
-              <Box
-                flexDir={"row"}
-                justify="space-between"
-                align={"flex-start"}
-                width={"100%"}
-                height={"100%"}
-                flexGrow={1}
-              >
-                <Box centerAnchor={false} margin={0.05}>
-                  {/* <Sphere /> */}
-                </Box>
-
-                <Box centerAnchor={false} margin={0.05}>
-                  {() => {
-                    const flexScale = viewport.width / 12;
-
-                    return (
-                      <Text3D
-                        font={InterBold}
-                        scale={[flexScale, flexScale, flexScale]}
-                        position={[-0.11, 1, 0]}
-                        rotation={degreesToRadian([70, 0, 0])}
-                      >
-                        {/* {score}/{level * 5} */}
-                        {gameResult.message}
-                        <meshPhysicalMaterial
-                          materialProps
-                          color={gameResult.style}
-                        />
-                      </Text3D>
-                    );
-                  }}
-                </Box>
-
-                <Box centerAnchor={false} margin={0.05}>
-                  {/* <Sphere /> */}
-                </Box>
-              </Box>
-            </Flex>
+            <GameResult gameResult={gameResult} />
           </Scroll>
         </PresentationControls>
       </ScrollControls>
@@ -531,8 +437,6 @@ const App = () => {
     return materials;
   });
 
-  //const colorMap = useLoader(TextureLoader, psIcon);
-
   const body = document.body;
   body.style.cursor = `url(${elipse}), pointer`;
 
@@ -551,21 +455,22 @@ const App = () => {
       {console.count("render")}
       <div id="canvas-container">
         <Canvas {...canvasProps}>
-          {/* <Stats /> */}
+          <Stats />
           {/* <OrbitControls /> */}
+
           <Lighting />
+
           <Suspense fallback={<Html center>loading..</Html>}>
-            {/* <PsxMemo
+            {/* <PsxMemCard
               color={"grey"}
               position={[0, 0.75, -2]}
               scale={[0.25, 0.25, 0.25]}
               rotate={true}
             /> */}
-            <Layout materials={materialGroup} />
+            <GameLayout materials={materialGroup} />
           </Suspense>
 
           <GridBoxB
-            //rotation={[0, 0, 0]}
             rotation={[0, -1, 0]}
             orientateGrid={orientateGrid}
             orientateAxis={orientateAxis}
