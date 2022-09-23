@@ -4,98 +4,100 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import {
   Html,
   Plane,
-  OrbitControls,
-  Sky,
   Scroll,
-  useScroll,
   Stats,
-  ScrollControls,
-  Billboard,
-  Text,
   Text3D,
   Float,
-  Center,
+  Sky,
   useGLTF,
+  useScroll,
+  OrbitControls,
+  ScrollControls,
+  PresentationControls,
 } from "@react-three/drei";
 
-import { Flex, Box, useFlexSize } from "@react-three/flex";
+import { Flex, Box } from "@react-three/flex";
 import { Canvas, useLoader, useFrame, useThree } from "@react-three/fiber";
 
-import Card from "./THREE/Card";
-import GameAssets from "./THREE/PlayCard";
-import InterBold from "./THREE/fonts/Inter_Bold.json";
+import Card from "./three-fiber-customs/Card";
+import GameAssets from "./three-fiber-customs/PlayCard";
+import InterBold from "./three-fiber-customs/fonts/Inter_Bold.json";
 import elipse from "../images/elipse.svg";
-import degreesToRadian from "./THREE/utility/degressToRadian";
+import degreesToRadian from "./three-fiber-customs/utility/degressToRadian";
 import psIcon from "../components/ps_home_a.svg";
 import { TextureLoader } from "three";
 
-import allAssetsFromDirectory from "./THREE/Assets";
+import Stage from "./three-fiber-customs/Stage";
+import Lighting from "./three-fiber-customs/Lighting";
 
-const PsxMemo = (props) => {
-  // const ref = useRef();
-  // useFrame((state, delta) => (ref.current.rotation.x += 0.01));
+import Game from "./Game";
+import Scoreboard from "./Scoreboard";
 
-  return (
-    <Card
-      position={props.position}
-      color={props.color}
-      invert={props.invert}
-      scale={props.scale}
-      rotate={props.rotate}
-    />
-  );
+import allAssetsFromDirectory from "./three-fiber-customs/Assets";
+
+const PsxMemo = (props) => (
+  <Card
+    position={props.position}
+    color={props.color}
+    invert={props.invert}
+    scale={props.scale}
+    rotate={props.rotate}
+  />
+);
+
+const colours = ["grey", "steelblue", "indianred", "purple"];
+
+const materialProps = {
+  thickness: 5,
+  roughness: 0,
+  clearcoat: 1,
+  clearcoatRoughness: 0,
+  transmission: 1,
+  ior: 1.25,
+  envMapIntensity: 25,
+  color: "#ffffff",
+  attenuationTint: "#ffe79e",
+  attenuationDistance: 1,
 };
 
-const MemoryCards = () => {
+const Sphere = (props) => {
+  const colorMap = useLoader(TextureLoader, psIcon);
+
   return (
-    <group>
-      <Box margin={0.1} centerAnchor={false}>
-        <PsxMemo color="steelblue" scale={[0.2, 0.2, 0.2]} rotate={true} />
-      </Box>
-
-      <Box margin={0.1} centerAnchor={false}>
-        <PsxMemo color={"grey"} scale={[0.3, 0.3, 0.3]} rotate={true} />
-      </Box>
-
-      <Box margin={0.1} centerAnchor={false}>
-        <PsxMemo color={"indianred"} scale={[0.2, 0.2, 0.2]} rotate={true} />
-      </Box>
-
-      <Box margin={0.1} centerAnchor={false}>
-        <PsxMemo color={"purple"} scale={[0.2, 0.2, 0.2]} rotate={true} />
-      </Box>
-    </group>
+    <Float>
+      <mesh position={props.position} rotation={props.rotation}>
+        <sphereGeometry args={[0.1, 32, 16]} />
+        <meshPhysicalMaterial
+          wireframe={true}
+          map={colorMap}
+          {...materialProps}
+        />
+      </mesh>
+    </Float>
   );
 };
 
 const PsxCard = (props) => {
-  console.count("Card render");
+  //console.count("Card render");
 
   const NewCard = GameAssets.GameCard;
+  const { card, clr, scale, rotation, selected, materials } = props;
 
-  const { card, clr, scale, rotation, selected, shuffle, materials } = props;
   return (
     <NewCard
-      card={card.uri}
+      card={card}
       materials={materials}
       cardRef={card}
       clr={clr}
       scale={scale}
       rotation={rotation}
       selected={selected}
-      request={shuffle}
     />
   );
 };
 
-const FiveCardSuite = ({
-  cardSet,
-  requestReshuffle,
-  selected,
-  assets,
-  materials,
-}) => {
-  console.count("Row render");
+const FiveCardSuite = ({ cardSet, selected, materials }) => {
+  //console.count("Row render");
   let cardIndex = 0;
 
   return (
@@ -107,17 +109,16 @@ const FiveCardSuite = ({
 
         return (
           <Box key={nanoid()} centerAnchor={false} margin={0.05}>
-            <Float floatIntensity={0}>
-              <PsxCard
-                card={card}
-                materials={materials[card.deckIndex]}
-                clr={clr}
-                scale={[0.1, 0.1, 0.1]}
-                rotation={[180, 0, 0]}
-                selected={selected}
-                shuffle={requestReshuffle}
-              />
-            </Float>
+            {/* <Float floatIntensity={0}> */}
+            <PsxCard
+              card={card}
+              materials={materials[card.deckIndex]}
+              clr={clr}
+              scale={[0.1, 0.1, 0.1]}
+              rotation={[180, 0, 0]}
+              selected={selected}
+            />
+            {/* </Float> */}
           </Box>
         );
       })}
@@ -125,27 +126,22 @@ const FiveCardSuite = ({
   );
 };
 
-const breakpoints = {
-  small: 1.653704375753992,
-  medium: 2.388048332566217,
-  large: 3.847596754008787,
-};
-
-let rowNum = 1;
+let rowNum = 10;
 
 const totalNumberOfCards = [...new Array(50).fill(0)].map(
   (item, index) => (item = index)
 );
 
+// hooks
+
 const GameView = (props) => {
-  console.count("Game view render");
+  //console.count("Game view render");
+  const { level, score, setLevel, setScore, setGameResult } = props;
 
-  const [score, setScore] = useState(0);
+  const newCardSet = Game.newCardSet;
+  const shuffleIndexOrder = Game.shuffleIndexOrder;
 
-  const fullCirlce = 2 * Math.PI;
-  const scoreDecrement = (2 * Math.PI) / (numOfRows * 5);
-
-  const [numOfRows, setNumOfRows] = useState(1); // each level is a row of 5 cards
+  const numOfRows = level; // each level is a row of 5 cards
   const [cards, setCards] = useState(newCardSet(numOfRows, totalNumberOfCards));
 
   const [requestNewCards, setRequestNewCards] = useState(false);
@@ -153,43 +149,41 @@ const GameView = (props) => {
   const [requestNextLevel, setRequestNextLevel] = useState(false);
 
   const [selected, setSelected] = useState();
-  const [noRepeat, setNoRepeat] = useState();
   const [trackSelected, setTrackSelected] = useState([]);
-  const [remainingCards, setRemainingCards] = useState(fullCirlce);
 
+  // feedback :: player selects card
   useEffect(() => {
-    // console.log(score);
-  }, [score]);
+    if (selected) {
+      if (trackSelected.includes(selected)) {
+        // restart game
+        setSelected();
+        setTrackSelected([]);
 
-  // level increase + 1 new row of cars
-  useEffect(() => {
-    if (requestNextLevel) {
-      setNumOfRows(numOfRows + 1);
+        setLevel(1);
+        setScore(0);
 
-      setRequestNewCards(true);
-      setRequestNextLevel(false);
-      rowNum++;
+        setGameResult({ message: "Try again...", style: "red" });
 
-      setNoRepeat();
-      setRemainingCards(fullCirlce);
+        setTimeout(() => {
+          setRequestNewCards(true);
+        }, 4200);
+
+        return;
+      }
+
+      // continue play
+      setTrackSelected(trackSelected.concat(selected));
+
+      setScore(score + 1);
+      setRequestReshuffle(true);
+
+      setSelected();
     }
-  }, [requestNextLevel]);
-
-  // new cards, same number of rows (level unchanged)
-  useEffect(() => {
-    if (requestNewCards) {
-      setCards(newCardSet(numOfRows, totalNumberOfCards));
-      setRequestNewCards(false);
-      setNoRepeat();
-      setRemainingCards(fullCirlce);
-    }
-  }, [requestNewCards]);
+  }, [selected]);
 
   // reshuffle cards
   useEffect(() => {
     if (requestReshuffle) {
-      //console.log("request reshuffle");
-
       setCards(() => {
         const indexShuffle = shuffleIndexOrder(cards, cards.length);
         return cards.map((card, index) => cards[indexShuffle[index]]);
@@ -199,43 +193,38 @@ const GameView = (props) => {
     }
   }, [requestReshuffle]);
 
-  // track selected card
+  // new cards, same number of rows (level unchanged)
   useEffect(() => {
-    if (selected) {
-      if (trackSelected.includes(selected)) {
-        //console.log("You Lose...");
+    if (requestNewCards) {
+      setCards(newCardSet(numOfRows, totalNumberOfCards));
+      setRequestNewCards(false);
+    }
+  }, [requestNewCards]);
 
-        setSelected();
-        setTrackSelected([]);
-        return setRequestNewCards(true);
+  // level increase + 1 new row of cards
+  useEffect(() => {
+    if (requestNextLevel) {
+      if (level < 10) {
+        setLevel(level + 1);
+        setRequestNewCards(true);
       }
 
-      //console.log("Great work, keep it up!");
-      setTrackSelected(trackSelected.concat(selected));
-      setNoRepeat(true);
-      setSelected();
+      setScore(0);
+      setRequestNextLevel(false);
     }
-  }, [selected]);
+  }, [requestNextLevel]);
 
-  // game won
+  // level completed / won the game
   useEffect(() => {
     if (trackSelected.length === cards.length) {
-      //console.log("You Win!");
+      // console.log("You Win!");
+
+      setRequestNextLevel(true);
+      setGameResult({ message: "Great memory!", style: "lightgrey" });
 
       setTrackSelected([]);
-      setRequestNextLevel(true);
     }
   }, [trackSelected]);
-
-  // score piechart
-  useEffect(() => {
-    if (noRepeat) {
-      setRemainingCards(remainingCards - scoreDecrement);
-      setNoRepeat(false);
-    }
-  }, [noRepeat]);
-
-  // max level beaten - declare winner
 
   let set = 0;
   let fiveCardSet = [];
@@ -253,183 +242,288 @@ const GameView = (props) => {
       return (
         <FiveCardSuite
           key={nanoid()}
-          assets={props.assets}
+          indexPos={index}
           materials={props.materials}
           cardSet={fiveCardSet}
           selected={setSelected}
-          requestReshuffle={setRequestReshuffle}
+          // requestReshuffle={setRequestReshuffle}
         />
       );
     }
   });
 };
 
-const Layout = (props) => {
-  //console.count("Layout render");
-
-  // const data = useScroll();
-
-  // const singlePage = data.pages / 4;
-  // //console.log(singlePage);
-
-  // data.el.className = "scroll-box";
-  // //console.dir(data);
+const ScrollConfig = () => {
+  const data = useScroll();
+  data.el.classList.add("scroll-box");
 
   // useFrame(() => {
-  //   // data.offset = 0.331;
-  //   // console.log(data.offset);
-  //   //const a = data.range(0, 1 / 3);
-  //   // console.log(a);
+  //   if (upClick) {
+  //     console.log("up clicked");
+  //     upClick = false;
+  //   }
+
+  //   if (downClick) {
+  //     console.log("down clicked");
+  //     downClick = false;
+  //   }
   // });
+};
+
+const flexDisplayHandler = (width, height, heightOffset, numberOfRows) => {
+  /*
+  Flex Breakpoints | Responsiveness
+
+  Aspect Ratio
+  Static    Dynamic
+  w 100px   h   <  95px                     :: 1 row
+  h 96px    w   >  100px                    :: 1 row
+
+  w 100px   h   >= 96px   &&    <= 118px    :: 2 rows
+  w 100px   h   >= 119px  &&    <= 159px    :: 3 rows
+  w 100px   h   >= 238px  &&                :: 5 rows
+
+  h 95px    w   <= 99px   &&    >= 60px     :: 2 rows
+  h 95px    w   <= 59px   &&    >= 40px     :: 3 rows
+  h 95px    w   <= 39px                     :: 5 rows
+  */
+
+  const percentage = width / 100;
+
+  // single row
+  let pageBreakpoint = 1;
+  let distBreakpoint = 0;
+  let contentAlign = "flex-end";
+
+  // 5 cards, 1 flex row
+  if (height <= percentage * 81) {
+    //console.log("1 row");
+
+    pageBreakpoint = 1;
+    distBreakpoint = 0;
+    contentAlign = "flex-end";
+
+    if (numberOfRows > 2) contentAlign = "flex-start";
+
+    if (numberOfRows > 3) {
+      pageBreakpoint = numberOfRows * heightOffset;
+      distBreakpoint = numberOfRows * 0.1;
+    }
+  }
+
+  // 5 cards, wrapped over 2 flex rows
+  if (height > percentage * 81 && height <= percentage * 136) {
+    //console.log("2 rows");
+
+    pageBreakpoint = 1;
+    distBreakpoint = 0;
+    contentAlign = "flex-end";
+
+    if (numberOfRows > 1) {
+      pageBreakpoint = numberOfRows * heightOffset * 2;
+      distBreakpoint = numberOfRows * 0.1;
+      contentAlign = "flex-start";
+    }
+  }
+
+  // 5 cards, wrapped over 3 flex rows
+  if (height >= percentage * 137 && height <= percentage * 204) {
+    //console.log("3 rows");
+
+    pageBreakpoint = 1;
+    distBreakpoint = 0;
+
+    if (numberOfRows > 1) {
+      pageBreakpoint = numberOfRows * heightOffset * 3;
+      distBreakpoint = numberOfRows * 0.1;
+    }
+
+    contentAlign = "flex-start";
+  }
+
+  // 5 cards, wrapped over 5 flex rows
+  if (height >= percentage * 205) {
+    //console.log("5 rows");
+
+    pageBreakpoint = numberOfRows * heightOffset * 5;
+    distBreakpoint = numberOfRows * 0.1;
+    contentAlign = "flex-start";
+  }
+
+  return { pageBreakpoint, distBreakpoint, contentAlign };
+};
+
+const Layout = ({ materials }) => {
+  console.count("Layout render");
+
+  /*
+  ScrollControls
+    page increment  : .329 | scale height of single card with margin
+    scroll distance : 0.1  | scroll travel distance for 1 card row
+  */
 
   const group = useRef();
   const { size, viewport } = useThree();
-  const vpWidth = -viewport.width / 2 + 0.32;
 
-  const headerHeight = 0.331;
-  const rowHeight = 0.331;
-  const largeDisplay = headerHeight + rowNum * rowHeight;
+  // level | number of rows (5 cards per row | 50 card total | 10 levels)
+  const [level, setLevel] = useState(1);
+  const [score, setScore] = useState(0);
 
-  // page     : .331 === 1 card row
-  // distance : 0.1  === 1 card row
+  const width = size.width;
+  const height = size.height;
 
-  // code something up for smaller viewports
-  const pages = rowNum < 3 && window.innerWidth >= 1152 ? 1 : largeDisplay;
-  const distance = rowNum < 3 && window.innerWidth >= 1152 ? 0 : rowNum * 0.01;
+  const margin = true; // compensate for margin on card box
+  const cardHeight = margin ? 0.329 : 0.295; // card scale height
 
-  const [pageBreakpoint, setPageBreakpoint] = useState(0);
-  const [distBreakpoint, setDistBreakpoint] = useState(0);
+  const cardsLayout = flexDisplayHandler(width, height, cardHeight, level);
+  const { pageBreakpoint, distBreakpoint, contentAlign } = cardsLayout;
+
+  let MobileGuiOffset = 0.125;
+  const padBot = level < 2 && size.width >= 655 ? 0.25 : 0.1;
+
+  const [gameResult, setGameResult] = useState({ message: "", style: "white" });
+
+  const flexProps = {
+    paddingTop: 0.1,
+    //paddingBottom: padBot,
+    // paddingBottom: 0.1,
+    flexDir: "column",
+    justify: contentAlign,
+    alignItems: "center",
+    alignContent: contentAlign,
+    size: [viewport.width, viewport.height, 0],
+  };
+
+  const flexGameViewPosition = [
+    -viewport.width / 2 + 0.32,
+    viewport.height / 2 - 0.2,
+    0,
+  ];
+
+  const flexScoreBoardPos = [
+    -viewport.width / 2 + 0.1,
+    viewport.height / 2 - 0.1,
+    0,
+  ];
+
+  const [presRotation, setPresRotation] = useState(
+    degreesToRadian([0, 0, 0])
+    //degreesToRadian([0, 0, 0])
+  );
+
+  const rotateView = (rotation, timer) => {
+    setTimeout(() => {
+      setPresRotation(rotation);
+    }, timer);
+  };
 
   useEffect(() => {
-    //console.log("change");
+    if (gameResult.message !== "") {
+      rotateView(degreesToRadian([-40, 0, 0]), 600, false);
+      rotateView(degreesToRadian([0, 0, 0]), 3000, true);
 
-    // 5 card split over 2 rows
-    if (viewport.width <= 3.847596754008787) {
-      setPageBreakpoint(rowNum * 0.331 * 2 + headerHeight);
+      setTimeout(() => setGameResult({ message: "", style: "white" }), 3100);
     }
-    // 5 card split over 3 rows
-    if (viewport.width <= 2.388048332566217) {
-      setPageBreakpoint(rowNum * 0.329 * 3 + headerHeight);
-    }
-    // 5 cards split over 5 rows
-    if (viewport.width <= 1.653704375753992) {
-      setPageBreakpoint(rowNum * 0.329 * 5 + headerHeight);
-    }
-
-    // large viewport
-    if (viewport.width > 3.847596754008787) {
-      setPageBreakpoint(pages);
-    }
-  }, [viewport.width]);
-
-  // vpWidth begin less than -1.4 means vp is getting wider
-  const contentAlign =
-    vpWidth < -1.4481063609166982 && rowNum < 3 ? "flex-end" : "flex-start";
+  }, [gameResult]);
 
   return (
-    <group ref={group}>
+    <group ref={group} name="game-view">
       <ScrollControls
-        pages={pageBreakpoint === 0 ? pages : pageBreakpoint} // Each page takes 100% of the height of the canvas
-        distance={distance + distBreakpoint} // scroll bar travel (default: 1)
+        pages={pageBreakpoint} // Combined height of rows
+        distance={distBreakpoint} // scroll bar travel (default: 1)
         damping={3} // Friction, higher is faster (default: 4)
-        horizontal={false} // Can also scroll horizontally (default: false)
-        infinite={false} // Can also scroll infinitely (default: false)
+        horizontal={false}
+        infinite={false}
       >
-        <Scroll>
-          <PsxMemo
-            position={[0, 2, -2]}
-            color={"grey"}
-            invert={false}
-            scale={[0.3, 0.3, 0.3]}
-            rotate={true}
-          />
-          <Flex
-            // padding={0.1}
-            flexDirection="column"
-            justify={contentAlign}
-            alignItems="center"
-            alignContent={contentAlign}
-            size={[viewport.width, viewport.height, 0]}
-            position={[
-              -viewport.width / 2 + 0.3,
-              viewport.height / 2 - 0.36 - 0,
-              0,
-            ]}
-          >
-            {/* <Box flexDir="row" justify="center" align="center">
-              <Box margin={0.1} centerAnchor={false}>
-                <PsxMemo
-                  position={[0.275, 0.25, -2]}
-                  color={"grey"}
-                  invert={false}
-                  scale={[0.3, 0.3, 0.3]}
-                  rotate={true}
-                />
+        <PresentationControls
+          global={false}
+          cursor={true}
+          snap={false} // snap back to default position
+          speed={1}
+          zoom={1}
+          //rotation={[0, 0, 0]}
+          rotation={presRotation} // Default rotation
+          polar={[-Math.PI / 6, 0]} // Vertical limits
+          azimuth={[0, 0]} // Horizontal limits
+          config={{ mass: 2, tension: 500, friction: 26 }} // Spring config
+        >
+          <ScrollConfig />
+          <Scroll>
+            {/* <PsxMemo
+              position={[0, 0.75, -1]}
+              color={"grey"}
+              invert={false}
+              scale={[0.25, 0.25, 0.25]}
+              rotate={true}
+            /> */}
+
+            <Flex {...flexProps} position={flexGameViewPosition}>
+              <GameView
+                materials={materials}
+                score={score}
+                level={level}
+                setScore={setScore}
+                setLevel={setLevel}
+                setGameResult={setGameResult}
+              />
+            </Flex>
+
+            <Flex {...flexProps} position={flexScoreBoardPos}>
+              <Box
+                flexDir={"row"}
+                justify="space-between"
+                align={"flex-start"}
+                width={"100%"}
+                height={"100%"}
+                flexGrow={1}
+              >
+                <Box centerAnchor={false} margin={0.05}>
+                  {/* <Sphere /> */}
+                </Box>
+
+                <Box centerAnchor={false} margin={0.05}>
+                  {() => {
+                    const flexScale = viewport.width / 12;
+
+                    return (
+                      <Text3D
+                        font={InterBold}
+                        scale={[flexScale, flexScale, flexScale]}
+                        position={[-0.11, 1, 0]}
+                        rotation={degreesToRadian([70, 0, 0])}
+                      >
+                        {/* {score}/{level * 5} */}
+                        {gameResult.message}
+                        <meshPhysicalMaterial
+                          materialProps
+                          color={gameResult.style}
+                        />
+                      </Text3D>
+                    );
+                  }}
+                </Box>
+
+                <Box centerAnchor={false} margin={0.05}>
+                  {/* <Sphere /> */}
+                </Box>
               </Box>
-            </Box> */}
-            <GameView assets={props.assets} materials={props.materials} />
-          </Flex>
-        </Scroll>
+            </Flex>
+          </Scroll>
+        </PresentationControls>
       </ScrollControls>
+
+      <Html as="div" position={[-viewport.width / 2, viewport.height / 2]}>
+        <Scoreboard level={level} score={score} />
+      </Html>
     </group>
   );
 };
 
-const shuffleIndexOrder = (array, stopper) => {
-  const shuffledArray = [];
-  let uniqueIndex = 0;
-
-  const arrayIndexRandomiser = (array) => {
-    return Math.floor(Math.random() * array.length);
-  };
-
-  while (uniqueIndex < stopper) {
-    const newIndex = arrayIndexRandomiser(array);
-
-    if (!shuffledArray.includes(newIndex)) {
-      uniqueIndex++;
-      shuffledArray.push(newIndex);
-    }
-
-    if (uniqueIndex === stopper) break;
-  }
-
-  return shuffledArray;
-};
-
-const newCardSet = (level, allCards) => {
-  const gameObjects = [];
-  const indexTracker = [];
-
-  let uniqueIndex = 0;
-  const totalNumOfCards = level * 5;
-
-  while (gameObjects.length < totalNumOfCards) {
-    const index = allCards[Math.floor(Math.random() * allCards.length)];
-
-    if (!indexTracker.includes(index)) {
-      const cardGameObject = {
-        id: nanoid(),
-        rowIndex: uniqueIndex,
-        deckIndex: index,
-      };
-
-      uniqueIndex++;
-      gameObjects.push(cardGameObject);
-
-      indexTracker.push(index);
-    }
-
-    if (gameObjects.length === totalNumOfCards) break;
-  }
-
-  return gameObjects;
-};
-
 const App = () => {
-  //console.count("App render");
+  const GridBoxA = Stage.gridBoxA;
+  const GridBoxB = Stage.gridBoxB;
 
-  // top load materials - pass down to component === less renders
+  // load materials - pass down to component | improved render performance
   const assets = allAssetsFromDirectory("models");
   const materialGroup = assets.map((asset) => {
     const { materials } = useGLTF(asset.uri);
@@ -437,7 +531,7 @@ const App = () => {
     return materials;
   });
 
-  const colorMap = useLoader(TextureLoader, psIcon);
+  //const colorMap = useLoader(TextureLoader, psIcon);
 
   const body = document.body;
   body.style.cursor = `url(${elipse}), pointer`;
@@ -445,127 +539,41 @@ const App = () => {
   const orientateGrid = degreesToRadian([90, 0, 0]);
   const orientateAxis = degreesToRadian(-90);
 
+  const canvasProps = {
+    shadows: true,
+    frameloop: "demand",
+    dpr: window.devicePixelRatio,
+    camera: { position: [0, 0, 1.95] },
+  };
+
   return (
     <>
+      {console.count("render")}
       <div id="canvas-container">
-        <Canvas
-          shadows
-          frameloop="demand"
-          dpr={window.devicePixelRatio}
-          camera={{
-            // orthographic: true,
-            position: [0, 0, 1.95],
-          }}
-        >
-          <Stats />
-          {/* <OrbitControls
-          // enableZoom={false}
-          // enableRotate={false}
-          // enablePan={false}
-          // minPolarAngle={Math.PI / 2}
-          // maxPolarAngle={Math.PI / 2}
-          /> */}
-          <color attach="background" args={["lightgrey"]} />
-          <directionalLight
-            args={[0xffffff]} //0xff0000
-            color="whitesmoke"
-            position={[-2, 0, 150]}
-            intensity={0.5}
-          />
-          <ambientLight intensity={0.5} />
-          <spotLight
-            position={[1, 10, 25]}
-            // position={[10, 10, 25]}
-            penumbra={1}
-            angle={0.2}
-            color="white"
-            castShadow
-            intensity={1}
-            shadow-mapSize={[512, 512]}
-          />
-          <directionalLight
-            position={[0, -15, -0]}
-            intensity={4}
-            color="steelblue"
-          />
+        <Canvas {...canvasProps}>
+          {/* <Stats /> */}
+          {/* <OrbitControls /> */}
+          <Lighting />
           <Suspense fallback={<Html center>loading..</Html>}>
-            <Layout
-              assets={assets}
-              materials={materialGroup}
-              // cards={cards}
-              // setCards={setCards}
-              // level={numOfRows}
-              // noRepeat={setNoRepeat}
-              // requestNewCards={setRequestNewCards}
-              // requestNextLevel={setRequestNextLevel}
-              // notifyScore={setScore}
-            />
+            {/* <PsxMemo
+              color={"grey"}
+              position={[0, 0.75, -2]}
+              scale={[0.25, 0.25, 0.25]}
+              rotate={true}
+            /> */}
+            <Layout materials={materialGroup} />
           </Suspense>
-          <GridBox
+
+          <GridBoxB
+            //rotation={[0, 0, 0]}
+            rotation={[0, -1, 0]}
             orientateGrid={orientateGrid}
             orientateAxis={orientateAxis}
           />
         </Canvas>
       </div>
-      {/* <div
-        style={{
-          backgroundColor: "#cecdcd",
-          width: "100vw",
-          height: "28px",
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          // outline: "1px dashed red",
-        }}
-      ></div> */}
     </>
   );
 };
-
-const GridBox = ({ rotation, orientateGrid, orientateAxis }) => (
-  <group rotation={[0, 0, 0]} position={[0, 0, -9]}>
-    <gridHelper // back wall
-      position={[0, 2.5, -7.5]}
-      rotation={orientateGrid}
-      scale={[1.5, 3, 1]}
-    />
-
-    <Plane
-      scale={[12, 15, 1]}
-      receiveShadow
-      position={[-7.5, 3.5, 2]}
-      rotation={degreesToRadian([45, 90, 90])}
-    >
-      <meshPhongMaterial attach="material" color="#ffffff" />
-    </Plane>
-
-    <gridHelper // left wall
-      position={[-7.5, 2.5, 0]}
-      rotation={degreesToRadian([90, 0, 90])}
-      scale={[1.5, 3, 1]}
-    />
-
-    <gridHelper // right wall
-      position={[7.5, 2.5, 0]}
-      rotation={degreesToRadian([90, 0, 90])}
-      scale={[1.5, 3, 1]}
-    />
-
-    <Plane
-      scale={[12, 15, 1]}
-      receiveShadow
-      position={[0, -2.5, 1.5]}
-      rotation={[orientateAxis, 0, 0]}
-    >
-      <meshPhongMaterial attach="material" color="#ffffff" />
-    </Plane>
-
-    <gridHelper
-      position={[0, -2.5, 0]}
-      rotation={[0, 0, 0]}
-      scale={(1.5, 1.5, 1.5)}
-    />
-  </group>
-);
 
 export default App;
