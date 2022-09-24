@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Fragment, Suspense, useEffect, useRef, useState } from "react";
 
 import {
   Html,
@@ -30,6 +30,7 @@ import Scoreboard from "./Scoreboard";
 import GameResult from "./three-fiber-customs/GameResult";
 
 import allAssetsFromDirectory from "./three-fiber-customs/Assets";
+import NavControls from "./NavControls";
 
 const PsxMemCard = (props) => (
   <Card
@@ -44,7 +45,7 @@ const PsxMemCard = (props) => (
 const colours = ["grey", "steelblue", "indianred", "purple"];
 
 const PsxCard = (props) => {
-  console.count("Card render");
+  //console.count("Card render");
 
   const GameplayCard = PlayCard.create;
   const { card, clr, scale, rotation, selected, materials } = props;
@@ -63,7 +64,7 @@ const PsxCard = (props) => {
 };
 
 const FiveCardSuite = ({ cardSet, selected, materials }) => {
-  //console.count("Row render");
+  console.count("Row render");
   let cardIndex = 0;
 
   return (
@@ -97,7 +98,7 @@ const totalNumberOfCards = [...new Array(50).fill(0)].map(
 );
 
 const GameView = (props) => {
-  //console.count("Game view render");
+  console.count("Game view render");
   const { level, score, setLevel, setScore, setGameResult } = props;
 
   const newCardSet = Game.newCardSet;
@@ -326,6 +327,8 @@ const GameLayout = ({ materials }) => {
   // level | number of rows (5 cards per row | 50 card total | 10 levels)
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
+
+  const [toggleView, setToggleView] = useState("");
   const [gameResult, setGameResult] = useState({ message: "", style: "white" });
 
   /*
@@ -357,6 +360,17 @@ const GameLayout = ({ materials }) => {
     degreesToRadian([-12, 0, 0])
   );
 
+  useEffect(() => {
+    if (toggleView === "change-view-angle") {
+      setPresRotation(degreesToRadian([-45, 0, 0]));
+    }
+    if (toggleView === "reset-view-angle") {
+      setPresRotation(degreesToRadian([-12, 0, 0]));
+    }
+
+    setToggleView("");
+  }, [toggleView]);
+
   const rotateView = (rotation, timer) => {
     setTimeout(() => {
       setPresRotation(rotation);
@@ -368,33 +382,34 @@ const GameLayout = ({ materials }) => {
       rotateView(degreesToRadian([-40, 0, 0]), 600, false);
       rotateView(degreesToRadian([-12, 0, 0]), 3000, true);
 
-      setTimeout(() => setGameResult({ message: "", style: "white" }), 3100);
+      setTimeout(() => setGameResult({ message: "", style: "white" }), 3600);
     }
   }, [gameResult]);
 
   return (
-    <group ref={group} name="game-view">
-      <ScrollControls
-        pages={pageBreakpoint} // Combined height of rows
-        distance={distBreakpoint} // scroll bar travel (default: 1)
-        damping={3} // Friction, higher is faster (default: 4)
-        horizontal={false}
-        infinite={false}
-      >
-        <PresentationControls
-          global={false}
-          cursor={true}
-          snap={false} // snap back to default position
-          speed={1}
-          zoom={1}
-          rotation={presRotation} // Default rotation
-          polar={[-Math.PI / 6, 0]} // Vertical limits
-          azimuth={[0, 0]} // Horizontal limits
-          config={{ mass: 2, tension: 500, friction: 26 }} // Spring config
+    <Fragment>
+      <group ref={group} name="game-view">
+        <ScrollControls
+          pages={pageBreakpoint} // Combined height of rows
+          distance={distBreakpoint} // scroll bar travel (default: 1)
+          damping={3} // Friction, higher is faster (default: 4)
+          horizontal={false}
+          infinite={false}
         >
-          <ScrollConfig />
-          <Scroll>
-            {/* <PsxMemCard
+          <PresentationControls
+            global={false}
+            cursor={true}
+            snap={false} // snap back to default position
+            speed={1}
+            zoom={1}
+            rotation={presRotation} // Default rotation
+            polar={[-Math.PI / 6, 0]} // Vertical limits
+            azimuth={[0, 0]} // Horizontal limits
+            config={{ mass: 2, tension: 500, friction: 26 }} // Spring config
+          >
+            <ScrollConfig />
+            <Scroll>
+              {/* <PsxMemCard
               position={[0, 0.75, -1]}
               color={"grey"}
               invert={false}
@@ -402,26 +417,32 @@ const GameLayout = ({ materials }) => {
               rotate={true}
             /> */}
 
-            <Flex {...flexProps} position={flexGameViewPosition}>
-              <GameView
-                materials={materials}
-                score={score}
-                level={level}
-                setScore={setScore}
-                setLevel={setLevel}
-                setGameResult={setGameResult}
-              />
-            </Flex>
+              <Flex {...flexProps} position={flexGameViewPosition}>
+                <GameView
+                  materials={materials}
+                  score={score}
+                  level={level}
+                  setScore={setScore}
+                  setLevel={setLevel}
+                  setGameResult={setGameResult}
+                />
+              </Flex>
 
-            <GameResult gameResult={gameResult} />
-          </Scroll>
-        </PresentationControls>
-      </ScrollControls>
+              <GameResult gameResult={gameResult} />
+            </Scroll>
+          </PresentationControls>
+        </ScrollControls>
+      </group>
 
-      <Html as="div" position={[-viewport.width / 2, viewport.height / 2]}>
+      <Html
+        as="aside"
+        position={[-viewport.width / 2, viewport.height / 2]}
+        style={{ zIndex: 1000 }}
+      >
         <Scoreboard level={level} score={score} />
+        <NavControls toggleView={toggleView} setToggleView={setToggleView} />
       </Html>
-    </group>
+    </Fragment>
   );
 };
 
@@ -455,7 +476,7 @@ const App = () => {
       {console.count("render")}
       <div id="canvas-container">
         <Canvas {...canvasProps}>
-          <Stats />
+          {/* <Stats /> */}
           {/* <OrbitControls /> */}
 
           <Lighting />
