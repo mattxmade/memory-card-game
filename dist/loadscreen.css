@@ -25,19 +25,16 @@
 }
 
 .loading-screen__spinner {
-  font-size: 8rem;
+  width: 8rem;
+  height: 8rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: black;
-  -webkit-animation-duration: 3s;
-  animation-duration: 3s;
-  -webkit-animation-name: rotate;
-  animation-name: rotate;
-  -webkit-animation-iteration-count: infinite;
-  animation-iteration-count: infinite;
-  -webkit-animation-direction: normal;
-  animation-direction: normal;
+  fill: black;
+  -webkit-animation: 3s infinite normal rotate;
+  -moz-animation: 3s infinite normal rotate;
+  -o-animation: 3s infinite normal rotate;
+  animation: 3s infinite normal rotate;
 }
 
 @-webkit-keyframes rotate {
@@ -58,7 +55,8 @@
   }
 }
 .loading-screen__logo {
-  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
   position: absolute;
-  color: white;
+  fill: white;
 }
