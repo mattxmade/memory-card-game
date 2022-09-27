@@ -24,6 +24,13 @@
   background: linear-gradient(45deg, lightgrey, steelblue, lightgrey);
 }
 
+.loading-screen__logo {
+  width: 3rem;
+  height: 3rem;
+  position: absolute;
+  fill: white;
+}
+
 .loading-screen__spinner {
   width: 8rem;
   height: 8rem;
@@ -46,7 +53,7 @@
   }
 }
 
-@keyframes rotate {
+@-moz-keyframes rotate {
   from {
     rotate: 0deg;
   }
@@ -54,9 +61,21 @@
     rotate: 360deg;
   }
 }
-.loading-screen__logo {
-  width: 3rem;
-  height: 3rem;
-  position: absolute;
-  fill: white;
+
+@-o-keyframes rotate {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes rotate {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: 360deg;
+  }
 }
