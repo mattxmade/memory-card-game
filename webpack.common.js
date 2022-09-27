@@ -18,7 +18,14 @@ module.exports = {
   output: {
     filename: "[name].bundle.js",
     path: path.resolve(__dirname, "dist"),
-    assetModuleFilename: "[name][ext]",
+    assetModuleFilename: (pathData) => {
+      const filepath = path
+        .dirname(pathData.filename)
+        .split("/")
+        .slice(1)
+        .join("/");
+      return `${filepath}/[name][ext]`;
+    },
     clean: true,
   },
   optimization: {
@@ -38,7 +45,7 @@ module.exports = {
         use: ["style-loader", "css-loader"],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif|webp|ico)$/i,
+        test: /\.(png|svg|jpg|jpeg|gif|webp|ico|fbx|gltf|glb|hdr|mp4|mp3|wav)$/i,
         type: "asset/resource",
       },
       {
@@ -48,3 +55,5 @@ module.exports = {
     ],
   },
 };
+
+// [1] dist structure === src strucutre https://stackoverflow.com/a/68902490
