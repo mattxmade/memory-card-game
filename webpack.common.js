@@ -7,8 +7,9 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       inject: true,
-      minify: false,
-      title: "Memory Card PSX",
+      minify: true,
+      favicon: "./src/favicon.ico",
+      title: "React Memory Card Game",
       template: "./src/index.html",
     }),
     new CopyPlugin({
