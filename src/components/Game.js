@@ -5,6 +5,7 @@ import { Stats } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { useLoader } from "@react-three/fiber";
 
+import isTouchDevice from "./game-view/utility/isTouchDevice";
 import degreesToRadian from "./game-view/utility/degressToRadian";
 import allAssetsFromDirectory from "./game-view/assets/AssetsImporter";
 
@@ -32,7 +33,7 @@ const Game = () => {
 
   const canvasProps = {
     shadows: true,
-    frameloop: "demand",
+    frameloop: isTouchDevice() ? "demand" : "always",
     dpr: window.devicePixelRatio,
     camera: { position: [0, 0, 1.95] },
   };
@@ -51,7 +52,7 @@ const Game = () => {
             orientateGrid={orientateGrid}
             orientateAxis={orientateAxis}
           />
-          {/* <Stats/> */}
+          {/* <Stats /> */}
         </Canvas>
       </div>
     </Fragment>
