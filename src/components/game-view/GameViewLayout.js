@@ -114,7 +114,7 @@ const GameViewLayout = ({ materials }) => {
 
   useFrame((state, delta, xrFrame) => {
     if (gameResult.message !== "") {
-      invalidate();
+      // invalidate();
 
       rotateView(degreesToRadian([-40, 0, 0]), 600, false);
       rotateView(degreesToRadian([-12, 0, 0]), 3000, true);
