@@ -32,6 +32,11 @@ const ScrollNavigationUI = (props) => {
       setTimeout(() => setScrollUp(false), 2800);
     }
 
+    if (scrollUp === null) {
+      data.scroll.current = 0;
+      setScrollUp(false);
+    }
+
     if (scrollDown) {
       setScrollUp(false);
       data.el.scrollBy(0, window.innerHeight);
@@ -50,7 +55,7 @@ const GameViewLayout = ({ materials }) => {
   const height = size.height;
 
   // level | number of rows (5 cards per row | 50 card total | 10 levels)
-  const [level, setLevel] = useState(1);
+  const [level, setLevel] = useState(5);
   const [score, setScore] = useState(0);
 
   const [toggleView, setToggleView] = useState("");
@@ -112,16 +117,17 @@ const GameViewLayout = ({ materials }) => {
     }, timer);
   };
 
-  useFrame((state, delta, xrFrame) => {
+  useEffect(() => {
     if (gameResult.message !== "") {
       // invalidate();
+      setScrollUp(null);
 
-      rotateView(degreesToRadian([-40, 0, 0]), 600, false);
-      rotateView(degreesToRadian([-12, 0, 0]), 3000, true);
+      rotateView(degreesToRadian([-40, 0, 0]), 600);
+      rotateView(degreesToRadian([-12, 0, 0]), 3000);
 
       setTimeout(() => setGameResult({ message: "", style: "white" }), 3600);
     }
-  });
+  }, [gameResult]);
 
   return (
     <Fragment>
