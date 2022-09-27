@@ -7,6 +7,15 @@ import { useFrame, invalidate } from "@react-three/fiber";
 import webCard from "./assets/card/01.glb";
 import degreesToRadian from "./utility/degressToRadian";
 
+import svgCircleButton from "../../svg/circle-button.svg";
+
+const setCursor = (active) => {
+  const body = document.body;
+  body.style.cursor = "auto";
+
+  if (active) body.style.cursor = `url(${svgCircleButton}), pointer`;
+};
+
 const PlayingCard = (() => {
   const inView = [];
 
@@ -57,6 +66,8 @@ const PlayingCard = (() => {
         scale={scale}
         rotation={setRotation}
         position={[0, 0, 0]}
+        onPointerOver={(e) => setCursor(true)}
+        onPointerLeave={(e) => setCursor(false)}
         onPointerDown={(e) => hover(true)}
         onPointerUp={(e) => hover(false)}
       >
