@@ -1,5 +1,4 @@
 import React, { Fragment, Suspense, useEffect, useRef, useState } from "react";
-import svgCircleButton from "../svg/circle-button.svg";
 import Game from "./Game";
 
 const App = () => {
@@ -7,9 +6,6 @@ const App = () => {
 
   const closeModal = document.querySelector(".close-modal");
   const loadScreen = document.querySelector(".loading-screen");
-
-  const body = document.body;
-  body.style.cursor = `url(${svgCircleButton}), pointer`;
 
   const [gameReady, setGameReady] = useState(false);
 
