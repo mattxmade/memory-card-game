@@ -18,6 +18,12 @@ import GameResult from "./GameResult";
 import Scoreboard from "../Scoreboard";
 import NavControls from "../NavControls";
 
+let enableScroll = false;
+
+window.addEventListener("click", () => {
+  if (enableScroll) enableScroll = false;
+});
+
 const ScrollNavigationUI = (props) => {
   const { scrollUp, scrollDown, setScrollUp, setScrollDown, scrollFactor } =
     props;
@@ -25,11 +31,36 @@ const ScrollNavigationUI = (props) => {
   const data = useScroll();
   data.el.classList.add("scroll-box");
 
+  // 5 cards over 1 row   :   0.5992010652463382
+  // 5 cards over 2 rows  :   0.16824966078697423
+  // 5 cards over 3 rows  :   0.09678878335594754
+  // 5 cards over 5 rows  :   0.05318860244233378
+
+  // scrollFactor
+  const moveToPosition = data.pages / scrollFactor;
+  const scrollSpeed = 30;
+
+  if (scrollUp || scrollDown) {
+    enableScroll = true;
+  }
+
+  const cancelScrolling = () => {
+    setScrollUp(false);
+    setScrollDown(false);
+    enableScroll = false;
+  };
+
   useFrame(() => {
+    if (enableScroll === false) {
+      return cancelScrolling();
+    }
+
     if (scrollUp) {
-      setScrollDown(false);
-      data.el.scrollBy(0, -window.innerHeight);
-      setTimeout(() => setScrollUp(false), 2800);
+      data.el.scrollBy(0, -(moveToPosition * scrollSpeed));
+
+      //setScrollDown(false);
+      // data.el.scrollBy(0, -window.innerHeight);
+      // setTimeout(() => setScrollUp(false), 2800);
     }
 
     if (scrollUp === null) {
@@ -38,9 +69,11 @@ const ScrollNavigationUI = (props) => {
     }
 
     if (scrollDown) {
-      setScrollUp(false);
-      data.el.scrollBy(0, window.innerHeight);
-      setTimeout(() => setScrollDown(false), 2800);
+      data.el.scrollBy(0, moveToPosition * scrollSpeed);
+
+      //setScrollUp(false);
+      // data.el.scrollBy(0, window.innerHeight);
+      // setTimeout(() => setScrollDown(false), 2800);
     }
   });
 };
