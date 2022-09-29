@@ -1,5 +1,6 @@
 import React, { Fragment, Suspense, useEffect, useRef, useState } from "react";
 import Game from "./Game";
+import Sounds from "./Sounds";
 
 const App = () => {
   const modal = document.querySelector("dialog");
@@ -15,7 +16,10 @@ const App = () => {
   };
 
   useEffect(() => {
-    closeModal.addEventListener("click", () => modal.close());
+    closeModal.addEventListener("click", () => {
+      modal.close();
+      document.querySelector(".sfx-close").play();
+    });
     setGameReady(true);
   }, []);
 
@@ -26,6 +30,7 @@ const App = () => {
   return (
     <Fragment>
       <Game />
+      <Sounds />
     </Fragment>
   );
 };
