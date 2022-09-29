@@ -16,6 +16,14 @@ const setCursor = (active) => {
   if (active) body.style.cursor = `url(${svgCircleButton}), pointer`;
 };
 
+const useEmissive = (state, ref, intensity) =>
+  void (
+    state &&
+    ref.current.children.forEach((mesh) => {
+      mesh.material.emissiveIntensity = intensity;
+    })
+  );
+
 const PlayingCard = (() => {
   const inView = [];
 
@@ -26,7 +34,8 @@ const PlayingCard = (() => {
     const ref = useRef();
 
     const { card, texture, scale, rotate, rotation, clr, selected } = props;
-    const [hovered, hover] = useState(false);
+    const [choice, setChoice] = useState(false);
+    const [hover, setHover] = useState(false);
     const setRotation = degreesToRadian(rotation);
 
     const { nodes, materials } = useGLTF(webCard);
@@ -37,17 +46,13 @@ const PlayingCard = (() => {
       //if (!inView.includes(card.rowIndex)) inView.push(card.rowIndex);
     });
 
+    useEffect(() => setCursor(hover), [hover]);
+
     // Set emissiveIntensity to a high value like 3 on hover
-    useEffect(
-      () =>
-        void (
-          hovered &&
-          ref.current.children.forEach((mesh) => {
-            mesh.material.emissiveIntensity = 1.5;
-          })
-        ),
-      [hovered]
-    );
+    useEffect(() => {
+      useEmissive(hover, ref, 0.5);
+      useEmissive(choice, ref, 1.5);
+    }, [choice, hover]);
 
     // Lerp it down to 0 constantly in the render loop
     useFrame((state, delta, xrFrame) => {
@@ -66,10 +71,10 @@ const PlayingCard = (() => {
         scale={scale}
         rotation={setRotation}
         position={[0, 0, 0]}
-        onPointerOver={(e) => setCursor(true)}
-        onPointerLeave={(e) => setCursor(false)}
-        onPointerDown={(e) => hover(true)}
-        onPointerUp={(e) => hover(false)}
+        onPointerOver={(e) => setHover(true)}
+        onPointerLeave={(e) => setHover(false)}
+        onPointerDown={(e) => setChoice(true)}
+        onPointerUp={(e) => setChoice(false)}
       >
         <mesh
           ref={meshRef}
