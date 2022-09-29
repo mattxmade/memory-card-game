@@ -1,7 +1,9 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment } from "react";
+import "../components/styles/nav-controls.css";
 
 const NavControls = ({ setToggleView, setScrollUp, setScrollDown }) => {
   const configModal = document.querySelector("dialog");
+  const audioElement = document.querySelector(".sfx-open");
 
   return (
     <Fragment>
@@ -52,6 +54,7 @@ const NavControls = ({ setToggleView, setScrollUp, setScrollDown }) => {
         onClick={(e) => {
           e.preventDefault();
           configModal.showModal();
+          if (audioElement) audioElement.play();
         }}
       >
         <i className="fas fa-gamepad"></i>
