@@ -36,11 +36,12 @@ const CardsView = (props) => {
         setLevel(1);
         setScore(0);
 
+        //setTimeout(() => document.querySelector(".sfx-alert").play(), 600);
         setGameResult({ message: "Try again...", style: "red" });
 
         setTimeout(() => {
           setRequestNewCards(true);
-        }, 4200);
+        }, 4600);
 
         return;
       }
@@ -92,7 +93,7 @@ const CardsView = (props) => {
   useEffect(() => {
     if (trackSelected.length === cards.length) {
       setRequestNextLevel(true);
-      setGameResult({ message: "Great memory!", style: "lightgrey" });
+      setGameResult({ message: "Great memory!", style: "dodgerblue" });
 
       setTrackSelected([]);
     }
