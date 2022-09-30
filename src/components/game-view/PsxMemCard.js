@@ -25,7 +25,7 @@ export default function MemoryCard({
     <group {...props} dispose={null}>
       <mesh
         castShadow
-        receiveShadow
+        // receiveShadow
         geometry={nodes.MemoryCard.geometry}
         ref={ref}
         position={position}
