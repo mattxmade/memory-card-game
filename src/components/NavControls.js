@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import "../components/styles/nav-controls.css";
+import "../styles/nav-controls.css";
 
 const NavControls = ({ setToggleView, setScrollUp, setScrollDown }) => {
   const configModal = document.querySelector("dialog");
