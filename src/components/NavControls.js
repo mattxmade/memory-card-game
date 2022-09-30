@@ -7,15 +7,15 @@ const NavControls = ({ setToggleView, setScrollUp, setScrollDown }) => {
 
   return (
     <Fragment>
-      <ol className="nav-controls">
+      <ol className="nav-controls heads-up-display">
         <li
-          className="nav-controls__item"
+          className="nav-controls__item heads-up-display__item"
           onClick={(e) => {
             e.preventDefault();
             setScrollUp(true);
           }}
         />
-        <li className="nav-controls__item">
+        <li className="nav-controls__item heads-up-display__item">
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -42,7 +42,7 @@ const NavControls = ({ setToggleView, setScrollUp, setScrollDown }) => {
           <span>{"view"}</span>
         </li>
         <li
-          className="nav-controls__item"
+          className="nav-controls__item heads-up-display__item"
           onClick={(e) => {
             e.preventDefault();
             setScrollDown(true);
@@ -50,7 +50,7 @@ const NavControls = ({ setToggleView, setScrollUp, setScrollDown }) => {
         />
       </ol>
       <div
-        className="nav-controls__item config-icon"
+        className="nav-controls__item heads-up-display__item config-icon"
         onClick={(e) => {
           e.preventDefault();
           configModal.showModal();
