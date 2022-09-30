@@ -20,7 +20,7 @@ import GameResult from "./GameResult";
 import Scoreboard from "../Scoreboard";
 import NavControls from "../NavControls";
 
-import "../styles/game-view-scroll-box.css";
+import "../../styles/game-view-scroll-box.css";
 
 let enableScroll = false;
 
