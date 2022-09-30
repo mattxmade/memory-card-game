@@ -1,5 +1,5 @@
 import React from "react";
-import "./styles/scoreboard.css";
+import "../styles/scoreboard.css";
 
 const Item = ({ heading, level, score }) => (
   <div className="scoreboard__item heads-up-display__item">
