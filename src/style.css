@@ -1,13 +1,172 @@
+/*=======
+  Fonts
+=========*/
+@font-face {
+  font-family: "Nabla";
+  src: url("./fonts/Nabla-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Play";
+  src: url("./fonts/Play-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Chakra Petch";
+  src: url("./fonts/ChakraPetch-SemiBold.ttf") format("truetype");
+}
+/*==========
+  Document
+============*/
+html {
+  font-size: 62.5%;
+  min-height: 100vh;
+}
+
+/*========
+  Setup
+==========*/
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/*================
+  Root Variables
+==================*/
 :root {
-  font-size: 62.5%;
+  --fontMain: #3a2011;
+  --fontBorder: #7e7d45;
+  --psx-button: rgb(68, 68, 68);
 }
 
-html {
+/*=========
+  Elements
+===========*/
+a {
+  color: steelblue;
+}
+
+h3,
+h4,
+h6 {
+  font-family: "Play", sans-serif;
+}
+
+h1,
+p {
+  font-size: 2rem;
+  font-family: "Chakra Petch", sans-serif;
+}
+
+ul {
+  list-style: none;
+}
+
+/*========
+  Canvas
+==========*/
+#canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background: linear-gradient(0deg, rgb(150, 183, 221), rgb(133, 172, 179), rgb(191, 196, 201) 50% 50%, rgb(133, 172, 179), rgb(150, 183, 221));
+}
+
+/*=======
+  Modal
+=========*/
+.wrapper {
+  overflow: hidden;
+}
+
+dialog {
+  height: 75%;
+  min-width: 35rem;
+  max-width: 50rem;
+  position: absolute;
+  border: none;
+  background-color: rgba(70, 130, 180, 0.4);
+  margin: auto;
+  padding-bottom: 1rem;
+  border-radius: 0.2rem;
+  cursor: auto;
+}
+
+.config {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  place-content: center;
+  color: white;
+}
+
+.config .config-icon {
+  margin-bottom: 1rem;
+}
+
+.ul-tabs {
+  margin-top: 2rem;
+  width: 90%;
+  display: flex;
+  align-items: center;
+  font-size: 2rem;
+  justify-content: space-between;
+}
+
+.li-tab {
+  cursor: pointer;
+  text-align: center;
+  width: 20%;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  background-color: rgb(43, 38, 38);
+}
+
+.tab-area {
+  flex: 1;
+  padding: 1rem;
+  width: 90%;
+  background-color: rgb(43, 38, 38);
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  font-size: 4rem;
+  display: grid;
+  justify-content: center;
+}
+.tab-area .tab-area__author-info,
+.tab-area .tab-area__game-info {
+  gap: 2rem;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.tab-area .tab-area__game-info {
+  position: relative;
+}
+
+:focus-visible {
+  outline: none;
+}
+
+.faq-cont {
+  display: grid;
+}
+.faq-cont h6 {
   font-size: 1.6rem;
+}
+
+.faq-cont__content_list {
+  display: flex;
+  flex-direction: column;
+}
+
+.faq-cont__content_list p {
+  font-size: 1.3rem;
 }/*# sourceMappingURL=style.css.map */
