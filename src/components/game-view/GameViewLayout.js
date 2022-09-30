@@ -10,13 +10,17 @@ import { Flex } from "@react-three/flex";
 import { invalidate, useFrame, useThree } from "@react-three/fiber";
 import React, { Fragment, useEffect, useRef, useState } from "react";
 
+import isTouchDevice from "./utility/isTouchDevice";
 import degreesToRadian from "./utility/degressToRadian";
 import flexDisplayHandler from "./utility/flexDisplayHandler";
 
+import PsxMemCard from "./PsxMemCard";
 import CardsView from "./CardsView";
 import GameResult from "./GameResult";
 import Scoreboard from "../Scoreboard";
 import NavControls from "../NavControls";
+
+import "../styles/game-view-scroll-box.css";
 
 let enableScroll = false;
 
@@ -29,12 +33,7 @@ const ScrollNavigationUI = (props) => {
     props;
 
   const data = useScroll();
-  data.el.classList.add("scroll-box");
-
-  // 5 cards over 1 row   :   0.5992010652463382
-  // 5 cards over 2 rows  :   0.16824966078697423
-  // 5 cards over 3 rows  :   0.09678878335594754
-  // 5 cards over 5 rows  :   0.05318860244233378
+  data.el.classList.add("cards-view-scroll-box");
 
   // scrollFactor
   const moveToPosition = data.pages / scrollFactor;
@@ -57,10 +56,6 @@ const ScrollNavigationUI = (props) => {
 
     if (scrollUp) {
       data.el.scrollBy(0, -(moveToPosition * scrollSpeed));
-
-      //setScrollDown(false);
-      // data.el.scrollBy(0, -window.innerHeight);
-      // setTimeout(() => setScrollUp(false), 2800);
     }
 
     if (scrollUp === null) {
@@ -70,10 +65,6 @@ const ScrollNavigationUI = (props) => {
 
     if (scrollDown) {
       data.el.scrollBy(0, moveToPosition * scrollSpeed);
-
-      //setScrollUp(false);
-      // data.el.scrollBy(0, window.innerHeight);
-      // setTimeout(() => setScrollDown(false), 2800);
     }
   });
 };
@@ -88,7 +79,7 @@ const GameViewLayout = ({ materials }) => {
   const height = size.height;
 
   // level | number of rows (5 cards per row | 50 card total | 10 levels)
-  const [level, setLevel] = useState(5);
+  const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
 
   const [toggleView, setToggleView] = useState("");
@@ -125,7 +116,7 @@ const GameViewLayout = ({ materials }) => {
   ];
 
   const [presRotation, setPresRotation] = useState(
-    degreesToRadian([-12, 0, 0])
+    degreesToRadian([-10, 0, 0])
   );
 
   const HtmlProps = {
@@ -155,10 +146,10 @@ const GameViewLayout = ({ materials }) => {
       // invalidate();
       setScrollUp(null);
 
-      rotateView(degreesToRadian([-40, 0, 0]), 600);
-      rotateView(degreesToRadian([-12, 0, 0]), 3000);
+      rotateView(degreesToRadian([-60, 0, 0]), 600);
+      rotateView(degreesToRadian([-10, 0, 0]), 3400);
 
-      setTimeout(() => setGameResult({ message: "", style: "white" }), 3600);
+      setTimeout(() => setGameResult({ message: "", style: "white" }), 4000);
     }
   }, [gameResult]);
 
@@ -191,6 +182,18 @@ const GameViewLayout = ({ materials }) => {
             config={{ mass: 2, tension: 500, friction: 26 }} // Spring config
           >
             <Scroll>
+              {!isTouchDevice() ? (
+                <PsxMemCard
+                  position={[0, 0.7, -1.75]}
+                  rotation={degreesToRadian([192, 0, 0])}
+                  color={"grey"}
+                  scale={[0.25, 0.25, 0.25]}
+                  rotate={level === 1 ? true : false}
+                />
+              ) : (
+                ""
+              )}
+
               <Flex {...flexProps} position={flexGameViewPosition}>
                 <CardsView
                   materials={materials}
