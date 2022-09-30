@@ -3,6 +3,7 @@ import { LinearEncoding } from "three";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 
+import "./assets/models/memory-card/credit.txt";
 import memoryCard from "./assets/models/memory-card/MemoryCard.glb";
 
 export default function MemoryCard({
