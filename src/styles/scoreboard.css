@@ -1,0 +1,73 @@
+.heads-up-display {
+  gap: 3rem;
+  margin: 1rem 0.25rem 0;
+  width: 6rem;
+  height: 25%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+}
+
+.heads-up-display__item {
+  width: 100%;
+  gap: 0.2rem;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+}
+
+/*==================
+  HUD | Scoreboard
+====================*/
+.scoreboard {
+  cursor: auto;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+.scoreboard h3 {
+  font-size: 1.6rem;
+  position: relative;
+  text-align: center;
+  background-image: linear-gradient(90deg, var(--fontBorder), var(--fontMain), var(--fontBorder));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+
+/*=========
+  Content
+===========*/
+.scoreboard__info {
+  position: relative;
+  border: 0.5rem solid rebeccapurple;
+  box-shadow: 1px 2px 4px 0px rgba(0, 0, 0, 0.25);
+  width: 5rem;
+  height: 3.5rem;
+  border-radius: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(45deg, rgb(7, 7, 7), rgb(30, 30, 30), rgb(75, 75, 75), rgb(80, 80, 80) 50% 50%, rgb(65, 65, 65), rgb(60, 60, 60));
+}
+.scoreboard__info p {
+  top: -0.2rem;
+  position: relative;
+  font-family: "Nabla", "Russo One", sans-serif;
+  color: gold;
+}
+
+.scoreboard__info_level {
+  font-size: 5rem;
+}
+
+.scoreboard__info_cards {
+  font-size: 2.5rem;
+}/*# sourceMappingURL=scoreboard.css.map */
