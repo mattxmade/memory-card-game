@@ -1,11 +1,12 @@
 import React from "react";
 import { useThree } from "@react-three/fiber";
 import { Flex, Box } from "@react-three/flex";
-import { Text3D } from "@react-three/drei";
+import { GradientTexture, Text3D } from "@react-three/drei";
 
 // import Sphere from "./Sphere";
 import InterBold from "./facetype-fonts/Inter_Bold.json";
 import degreesToRadian from "./utility/degressToRadian";
+import isTouchDevice from "./utility/isTouchDevice";
 
 const GameResult = ({ gameResult }) => {
   const { viewport } = useThree();
@@ -29,14 +30,14 @@ const GameResult = ({ gameResult }) => {
     <Flex {...flexProps} position={flexContainerPosition}>
       <Box
         flexDir={"row"}
-        justify="space-between"
+        justify="space-evenly"
         align={"flex-start"}
         width={"100%"}
         height={"100%"}
         flexGrow={1}
       >
         <Box centerAnchor={false} margin={0.05}>
-          {/* <Sphere /> */}
+          {/* {!isTouchDevice() ? <Sphere position={[0, 1, -3]} /> : ""} */}
         </Box>
 
         <Box centerAnchor={false} margin={0.05}>
@@ -47,21 +48,27 @@ const GameResult = ({ gameResult }) => {
               <Text3D
                 font={InterBold}
                 scale={[flexScale, flexScale, flexScale]}
-                position={[-0.11, 1, 0]}
+                position={[-0.11, 1, 1]}
                 rotation={degreesToRadian([70, 0, 0])}
               >
                 {gameResult ? gameResult.message : ""}
                 <meshPhysicalMaterial
-                  materialProps
+                  wireframw={true}
                   color={gameResult ? gameResult.style : "white"}
-                />
+                >
+                  <GradientTexture
+                    stops={[0, 1]} // As many stops as you want
+                    colors={["aquamarine", "hotpink"]} // Colors need to match the number of stops
+                    size={1024} // Size is optional, default = 1024
+                  />
+                </meshPhysicalMaterial>
               </Text3D>
             );
           }}
         </Box>
 
         <Box centerAnchor={false} margin={0.05}>
-          {/* <Sphere /> */}
+          {/* {!isTouchDevice() ? <Sphere position={[0, 1, -3]} /> : ""} */}
         </Box>
       </Box>
     </Flex>
