@@ -1,0 +1,94 @@
+.heads-up-display {
+  gap: 3rem;
+  margin: 1rem 0.25rem 0;
+  width: 6rem;
+  height: 25%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+}
+
+.heads-up-display__item {
+  width: 100%;
+  gap: 0.2rem;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-controls {
+  margin-top: 5rem;
+  gap: 1.5rem;
+  box-shadow: 1px 2px 4px 0px rgba(0, 0, 0, 0.25);
+}
+@media (max-width: 655px) {
+  .nav-controls {
+    margin-top: calc(100vh - 40rem);
+  }
+}
+
+.nav-controls li {
+  display: flex;
+  cursor: pointer;
+}
+.nav-controls li button {
+  width: 75%;
+  cursor: pointer;
+}
+
+.nav-controls li:first-child {
+  margin-top: 1rem;
+  -webkit-clip-path: polygon(45% 0, 55% 0, 100% 30%, 100% 100%, 0 100%, 0 30%);
+          clip-path: polygon(45% 0, 55% 0, 100% 30%, 100% 100%, 0 100%, 0 30%);
+}
+
+.nav-controls li:last-child {
+  margin-bottom: 1rem;
+  -webkit-clip-path: polygon(0 0, 100% 0, 100% 70%, 55% 100%, 45% 100%, 0 70%);
+          clip-path: polygon(0 0, 100% 0, 100% 70%, 55% 100%, 45% 100%, 0 70%);
+}
+
+.nav-controls li:first-child,
+.nav-controls li:last-child {
+  width: 28px;
+  height: 42px;
+  background-color: var(--psx-button);
+}
+
+.nav-controls li:nth-child(even) {
+  width: 4rem;
+  height: 4rem;
+  background-color: var(--psx-button);
+  border-radius: 100%;
+}
+.nav-controls li:nth-child(even) button {
+  height: 1.7rem;
+  width: 1.7rem;
+  color: transparent;
+  border: none;
+  outline: 0.3rem solid rgb(247, 120, 221);
+  background-color: transparent;
+  font-size: 0;
+}
+.nav-controls li:nth-child(even) span {
+  color: transparent;
+  position: absolute;
+  right: -25%;
+}
+
+.config-icon i {
+  cursor: pointer;
+  margin-top: 2rem;
+  font-size: 2rem;
+  color: white;
+  background-color: var(--psx-button);
+  width: 4rem;
+  height: 4rem;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100%;
+  box-shadow: 1px 2px 4px 0px rgba(0, 0, 0, 0.25);
+}/*# sourceMappingURL=nav-controls.css.map */
