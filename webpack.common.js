@@ -1,6 +1,7 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
+const { ESBuildMinifyPlugin } = require("esbuild-loader");
 
 module.exports = {
   entry: "./src/index.js",
@@ -30,15 +31,30 @@ module.exports = {
     clean: true,
   },
   optimization: {
-    runtimeChunk: "single",
+    //runtimeChunk: "single",
+
+    minimizer: [
+      new ESBuildMinifyPlugin({
+        target: "es2015",
+      }),
+    ],
   },
   module: {
     rules: [
+      // {
+      //   test: /\.js$/,
+      //   exclude: /node_modules/,
+      //   use: {
+      //     loader: "babel-loader",
+      //   },
+      // },
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: {
-          loader: "babel-loader",
+        loader: "esbuild-loader",
+        options: {
+          loader: "jsx",
+          target: "es2015",
         },
       },
       {
