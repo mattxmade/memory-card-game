@@ -14,5 +14,5 @@ Throughout the project useState and useEffect feature heavily. I was also introd
   <li>Autoscroll</li>
   <li>Z-axis tilt view</li>
   <li>Responsive 3D flex layout</li>
-  <li>3D object emissive highlighting on hover + click/touch </li>
+  <li>3D object emissive highlighting on hover + click/touch events </li>
 </ul>
