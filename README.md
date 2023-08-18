@@ -1,5 +1,5 @@
 <h1>Memory Card Game</h1>
-<p>A memory card game built using React, React-three-fiber and React-three-flex</p>
+<p>Memory card game built in React with React Three Fiber and React Three Flex</p>
 
 <strong>Live: </strong> <a href="https://mattxmade.github.io/memory-card-game/dist/index.html" target="_blank"> <strong>React Memory Card Game</strong></a>
 
